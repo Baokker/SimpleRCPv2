@@ -3,6 +3,7 @@ import type { LlmClient } from "../llm/client.js";
 import { extractFirstJsonObject } from "./extract.js";
 import toPath from "lodash/toPath.js";
 import { compactRecapEvidence, correctedIdentifiers, correctedSymbolBindings, validateRecapCheck } from "./recapEvidence.js";
+import { L } from "../util/lang.js";
 export { compactRecapEvidence, changedFunctionExcerpts, correctedIdentifiers, correctedSymbolBindings, recapFileVersions, validateRecapCheck } from "./recapEvidence.js";
 
 export interface AgentRecapDraft {
@@ -56,7 +57,7 @@ export function parseAgentRecapDraft(text: string, evidence: Record<string, unkn
   const check = normalizeCheck(input.checkSuggestion);
   if (input.checkSuggestion !== undefined && input.checkSuggestion !== null && !check) return undefined;
   const checkValidation = check ? validateRecapCheck(check, evidence) : undefined;
-  if (checkValidation && !checkValidation.retained) unknowns.push("自动检查未通过验证，已移除");
+  if (checkValidation && !checkValidation.retained) unknowns.push(L("自动检查未通过验证，已移除"));
   return { type, title: String(input.title).trim(), summary: String(input.summary).trim(), whatHappened: String(input.whatHappened).trim(), correction: String(input.correction).trim(), rule: String(input.rule).trim(), appliesTo: applies, notApplicable: String(input.notApplicable).trim(), scopeSuggestion: scope, ...(check && checkValidation?.retained ? { checkSuggestion: check } : {}), ...(checkValidation ? {checkValidation} : {}), confidence, evidenceCitations: citations, unknowns, fallback: false };
 }
 
@@ -99,11 +100,11 @@ export async function extractAgentRecapDraft(evidence: Record<string, unknown>, 
 
 export function createAgentRecapFallback(evidence: Record<string, unknown>): AgentRecapDraft {
   const file = typeof evidence.file === "string" ? evidence.file : undefined;
-  const before = typeof evidence.whatHappened === "string" ? evidence.whatHappened : "Agent 修改了工作区内容。";
-  const correction = typeof evidence.correction === "string" ? evidence.correction : "成员随后修改了 Agent 的结果。";
+  const before = typeof evidence.whatHappened === "string" ? evidence.whatHappened : L("Agent 修改了工作区内容。");
+  const correction = typeof evidence.correction === "string" ? evidence.correction : L("成员随后修改了 Agent 的结果。");
   const firstEvidenceKey = Object.keys(evidence)[0];
   const citation = file ? "evidence.file" : firstEvidenceKey ? `evidence.${firstEvidenceKey}` : "evidence";
-  return { type: "decision", title: "记录 Agent 修改后的人工纠正", summary: file ? `成员在 ${file} 上纠正了 Agent 的修改。` : "成员纠正了 Agent 的修改。", whatHappened: before, correction, rule: "", appliesTo: { files: file ? [file] : [], globs: [], taskKinds: [] }, notApplicable: "证据不足以覆盖其他任务。", scopeSuggestion: { scope: "personal", reason: "需要成员补充并确认适用规则。" }, confidence: 0.45, evidenceCitations: [citation], unknowns: ["纠正原因需要成员确认。"], fallback: true };
+  return { type: "decision", title: L("记录 Agent 修改后的人工纠正"), summary: file ? L("成员在 {0} 上纠正了 Agent 的修改。", file) : L("成员纠正了 Agent 的修改。"), whatHappened: before, correction, rule: "", appliesTo: { files: file ? [file] : [], globs: [], taskKinds: [] }, notApplicable: L("证据不足以覆盖其他任务。"), scopeSuggestion: { scope: "personal", reason: L("需要成员补充并确认适用规则。") }, confidence: 0.45, evidenceCitations: [citation], unknowns: [L("纠正原因需要成员确认。")], fallback: true };
 }
 
 export function buildAgentRecapSystemPrompt(evidence: Record<string, unknown>, language: "zh" | "en" = "zh"): string {

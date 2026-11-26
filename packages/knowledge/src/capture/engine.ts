@@ -6,6 +6,7 @@ import { AuthorshipIndex, isMemberActor } from "./authorship.js";
 import { VirtualCaptureClock, type CaptureClock } from "./clock.js";
 import { parseActor, type CaptureAgentFileChange, type CaptureAgentRunEvent, type CaptureAgentToolEvent, type CaptureChatEvent, type CaptureEditEvent, type CaptureEvent, type ExternalCollaborationEvent } from "./events.js";
 import { inferCoOccurrence, type CaptureActivity } from "./inference.js";
+import { L } from "../util/lang.js";
 
 export interface CaptureEngineConfig {
   checkpointIdleMs: number;
@@ -88,9 +89,9 @@ export function createAgentRevisedSuggestion(event: AgentRevisedEvent): CaptureS
     origin: "human-agent",
     actors: { memberIds: [...new Set([event.editor, ...(event.ownerId ? [event.ownerId] : [])])].sort(), runIds: [event.runId] },
     suggestedType: "decision",
-    suggestedTitle: "成员改写了 Agent 的内容",
-    suggestedSummary: `成员在 ${event.file} 上改写了 Agent 的内容`,
-    suggestedAnchors: event.anchors ?? [{ file: event.file, startLine: 1, endLine: lineCount, score: 1, reasons: ["Agent 修改范围"] }],
+    suggestedTitle: L("成员改写了 Agent 的内容"),
+    suggestedSummary: L("成员在 {0} 上改写了 Agent 的内容", event.file),
+    suggestedAnchors: event.anchors ?? [{ file: event.file, startLine: 1, endLine: lineCount, score: 1, reasons: [L("Agent 修改范围")] }],
     evidence: { file: event.file, runId: event.runId, editor: event.editor, ownerId: event.ownerId, overwritten: event.intervals, ...(event.diff ? { diff: event.diff } : {}), ...(event.replacement !== undefined ? { replacement: event.replacement } : {}), ...(event.chatMessages ? { chatMessages: event.chatMessages } : {}), ...(event.cursors ? { cursors: event.cursors } : {}), ...(event.restored ? { restored: event.restored } : {}), ...(event.agentPrompt !== undefined ? { agentPrompt: event.agentPrompt } : {}), ...(event.agentFileChange ? { agentFileChange: event.agentFileChange } : {}), ...(event.correctionFiles ? {correctionFiles: event.correctionFiles} : {}) },
     confidence: 0.7,
     state: "open"
@@ -533,7 +534,7 @@ export function changedSnippet(before: string, after: string) {
 }
 function rangeAnchor(file: string, text: string, start: number, end: number): SuggestedAnchor[] {
   if (!text) return [];
-  return [{ file, startLine: lineAt(text, Math.min(start, text.length)), endLine: lineAt(text, Math.min(Math.max(start, end), text.length)), score: 1, reasons: ["编辑范围"] }];
+  return [{ file, startLine: lineAt(text, Math.min(start, text.length)), endLine: lineAt(text, Math.min(Math.max(start, end), text.length)), score: 1, reasons: [L("编辑范围")] }];
 }
 function mostActiveSpeaker(messages: CaptureChatEvent[]) {
   const counts = new Map<string, number>();
@@ -564,4 +565,4 @@ function commandsMatch(left?: string, right?: string) {
   const shared = [...leftArguments].filter((token) => rightArguments.has(token)).length;
   return shared / Math.max(1, Math.min(leftArguments.size, rightArguments.size)) >= 0.5;
 }
-const titles: Record<string, string> = { "chat.dense": "协作讨论", "todo.cleared": "待办标记已完成", "magicNumber.added": "新增数字常量", "dependency.changed": "依赖变化", "rollback.detected": "内容恢复", "edit.overwritten": "成员改写了协作者的内容", "agent.interrupted": "Agent 任务被打断", "agent.revised": "成员改写了 Agent 的内容", "agent.corrected": "成员纠正了 Agent 任务", "agent.retried": "失败任务再次运行", "agent.toolRecovered": "工具失败后修复" };
+const titles: Record<string, string> = { "chat.dense": L("协作讨论"), "todo.cleared": L("待办标记已完成"), "magicNumber.added": L("新增数字常量"), "dependency.changed": L("依赖变化"), "rollback.detected": L("内容恢复"), "edit.overwritten": L("成员改写了协作者的内容"), "agent.interrupted": L("Agent 任务被打断"), "agent.revised": L("成员改写了 Agent 的内容"), "agent.corrected": L("成员纠正了 Agent 任务"), "agent.retried": L("失败任务再次运行"), "agent.toolRecovered": L("工具失败后修复") };

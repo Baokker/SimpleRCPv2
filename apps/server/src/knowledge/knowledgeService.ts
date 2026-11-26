@@ -36,6 +36,7 @@ const require = createRequire(import.meta.url);
 const YRuntime = require("yjs") as typeof Y;
 import { readJsonFile, writeJsonFileAtomically } from "../jsonFile.js";
 import { pathExists, readWorkspaceFile, resolveWorkspacePath } from "../workspace.js";
+import { L } from "@simplercp/knowledge/util/lang";
 
 export interface KnowledgeListFilter {
   file?: string;
@@ -278,7 +279,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
 
   function validateAssociationLevel(value: unknown): "block" | "file" | undefined {
     if (value === undefined || value === "block" || value === "file") return value;
-    throw new Error("请选择代码或文件作为适用范围");
+    throw new Error(L("请选择代码或文件作为适用范围"));
   }
 
   function lineColumnAt(text: string, offset: number) {
@@ -507,7 +508,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
         ...(check ? { check } : {}),
         anchors,
         evolution: [
-          { at: now, action: "created", by: { peerId: actor.memberId, name: actor.displayName }, note: draft.aiAssisted === true ? "手动创建，经 AI 整理并由成员核对" : undefined },
+          { at: now, action: "created", by: { peerId: actor.memberId, name: actor.displayName }, note: draft.aiAssisted === true ? L("手动创建，经 AI 整理并由成员核对") : undefined },
           { at: now, action: "confirmed", by: { peerId: actor.memberId, name: actor.displayName } }
         ]
       };
@@ -558,21 +559,21 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     }
     const now = Date.now();
     const changes: string[] = [];
-    if (card.title !== cardBeforeUpdate.title) changes.push("修改标题");
-    if (card.summary !== cardBeforeUpdate.summary) changes.push("修改摘要");
+    if (card.title !== cardBeforeUpdate.title) changes.push(L("修改标题"));
+    if (card.summary !== cardBeforeUpdate.summary) changes.push(L("修改摘要"));
     if (card.content !== cardBeforeUpdate.content) {
       const edits = diff(cardBeforeUpdate.content, card.content);
       const added = edits.filter(([operation]) => operation === diff.INSERT).reduce((total, [, text]) => total + text.length, 0);
       const removed = edits.filter(([operation]) => operation === diff.DELETE).reduce((total, [, text]) => total + text.length, 0);
-      changes.push(`修改正文，增加 ${added} 个字符，删除 ${removed} 个字符`);
+      changes.push(L("修改正文，增加 {0} 个字符，删除 {1} 个字符", added, removed));
     }
-    if (card.provenance?.author.memberId !== cardBeforeUpdate.provenance?.author.memberId) changes.push(`作者改为 ${card.provenance?.author.displayName ?? card.provenance?.author.memberId}`);
-    for (const [key, label] of [["tags", "标签"], ["scope", "作用域"], ["type", "类型"], ["appliesTo", "适用范围"], ["check", "自动检查"]] as const) {
-      if (JSON.stringify(card[key]) !== JSON.stringify(cardBeforeUpdate[key])) changes.push(`修改${label}`);
+    if (card.provenance?.author.memberId !== cardBeforeUpdate.provenance?.author.memberId) changes.push(L("作者改为 {0}", card.provenance?.author.displayName ?? card.provenance?.author.memberId));
+    for (const [key, label] of [["tags", L("标签")], ["scope", L("作用域")], ["type", L("类型")], ["appliesTo", L("适用范围")], ["check", L("自动检查")]] as const) {
+      if (JSON.stringify(card[key]) !== JSON.stringify(cardBeforeUpdate[key])) changes.push(L("修改{0}", label));
     }
-    if (patch.anchors !== undefined) changes.push(`锚点关联到 ${card.anchors.map(anchor => `${anchor.file.workspaceRelativePath}:${(anchor.rangeAtCapture?.start.line ?? 0) + 1}–${(anchor.rangeAtCapture?.end.line ?? 0) + 1}`).join("、")}`);
+    if (patch.anchors !== undefined) changes.push(L("锚点关联到 {0}", card.anchors.map(anchor => `${anchor.file.workspaceRelativePath}:${(anchor.rangeAtCapture?.start.line ?? 0) + 1}–${(anchor.rangeAtCapture?.end.line ?? 0) + 1}`).join("、")));
     if (typeof patch.note === "string" && patch.note) changes.push(patch.note);
-    const evolution: KnowledgeEvolutionEntry = { at: now, action: "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: changes.join("；") || "保存卡片" };
+    const evolution: KnowledgeEvolutionEntry = { at: now, action: "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: changes.join("；") || L("保存卡片") };
     return { ...card, updatedAt: now, evolution: [...card.evolution, evolution] };
   }
 
@@ -596,7 +597,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   }
 
   function hasRuleContent(content: string) {
-    const match = content.match(/^##[\t ]*规则[\t ]*\r?\n([\s\S]*?)(?=^##[\t ]|$(?![\s\S]))/im);
+    const match = content.match(/^##[\t ]*(?:规则|Rule)[\t ]*\r?\n([\s\S]*?)(?=^##[\t ]|$(?![\s\S]))/im);
     return Boolean(match?.[1]?.trim());
   }
 
@@ -687,7 +688,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       const anchors = stored.card.anchors.map((candidate, index) => index === anchorIndex ? anchor : candidate);
       const reviewing = stored.card.status === "needsReview" || stored.card.status === "orphaned";
       const invalid = reviewing && await anchorsNeedReview(stored.card, anchors);
-      const updated: KnowledgeCard = { ...stored.card, status: reviewing ? invalid ? "needsReview" : "reviewed" : stored.card.status, updatedAt: now, anchors, evolution: [...stored.card.evolution, { at: now, action: reviewing ? "reviewed" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: `锚点重新关联到 ${anchor.file.workspaceRelativePath}:${selection.startLineNumber}–${selection.endLineNumber}` }] };
+      const updated: KnowledgeCard = { ...stored.card, status: reviewing ? invalid ? "needsReview" : "reviewed" : stored.card.status, updatedAt: now, anchors, evolution: [...stored.card.evolution, { at: now, action: reviewing ? "reviewed" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: L("锚点重新关联到 {0}:{1}–{2}", anchor.file.workspaceRelativePath, selection.startLineNumber, selection.endLineNumber) }] };
       await saveCard(updated);
       event(updated.id, "knowledge_card_updated", actor);
       return updated;
@@ -698,15 +699,15 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     return enqueue(async () => {
       const stored = await readCard(id);
       if (!stored || !visible(stored.card, actor)) throw new KnowledgeCardNotFoundError("Knowledge card not found");
-      if (!canEdit(stored.card, actor)) throw new Error("只有卡片属主或确认人可以复核这张卡片");
-      if (!["reviewed", "needsReview", "orphaned"].includes(stored.card.status)) throw new Error("只有已确认的知识卡片可以复核");
+      if (!canEdit(stored.card, actor)) throw new Error(L("只有卡片属主或确认人可以复核这张卡片"));
+      if (!["reviewed", "needsReview", "orphaned"].includes(stored.card.status)) throw new Error(L("只有已确认的知识卡片可以复核"));
       const index = input.anchorIndex ?? 0;
       const previous = stored.card.anchors[index];
       if (!previous) throw new Error("Knowledge anchor not found");
       const file = input.file ?? previous.file.workspaceRelativePath;
       let anchor: KnowledgeAnchor;
       if (input.action === "reassociate") {
-        if (!input.selection) throw new Error("请在编辑器中选中代码后确认关联");
+        if (!input.selection) throw new Error(L("请在编辑器中选中代码后确认关联"));
         anchor = await anchorFromInput({ file, selection: input.selection });
       } else if (input.action === "file") {
         anchor = await anchorFromInput({ file, associationLevel: "file" });
@@ -717,11 +718,11 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
         anchor = range && !(range.startLine === range.endLine && range.startColumn === range.endColumn)
           ? await anchorFromInput({ file, selection: { startLineNumber: range.startLine, startColumn: range.startColumn, endLineNumber: range.endLine, endColumn: range.endColumn } })
           : await anchorFromInput({ file, associationLevel: "file" });
-      } else throw new Error("请选择重新关联、整个文件或仍然有效");
+      } else throw new Error(L("请选择重新关联、整个文件或仍然有效"));
       const now = Date.now();
       const anchors = stored.card.anchors.map((candidate, anchorIndex) => anchorIndex === index ? anchor : candidate);
       const invalid = await anchorsNeedReview(stored.card, anchors);
-      const note = input.action === "valid" ? `确认知识仍然有效，关联到 ${file}` : `重新关联到 ${file}${anchor.associationLevel === "file" ? " 整个文件" : `:${input.selection!.startLineNumber}–${input.selection!.endLineNumber}`}`;
+      const note = input.action === "valid" ? L("确认知识仍然有效，关联到 {0}", file) : L("重新关联到 {0}{1}", file, anchor.associationLevel === "file" ? L(" 整个文件") : `:${input.selection!.startLineNumber}–${input.selection!.endLineNumber}`);
       const updated: KnowledgeCard = { ...stored.card, anchors, status: invalid ? "needsReview" : "reviewed", updatedAt: now, evolution: [...stored.card.evolution, { at: now, action: "reviewed", by: { peerId: actor.memberId, name: actor.displayName }, note }] };
       await saveCard(updated);
       event(updated.id, "knowledge_card_updated", actor);
@@ -760,7 +761,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
           : now;
         const status: KnowledgeCardStatus = resolution.reason === "missing" && stored.card.status === "needsReview" && now - reviewStartedAt >= orphanedAfterMs ? "orphaned" : "needsReview";
         if (status === stored.card.status) continue;
-        const updated: KnowledgeCard = { ...stored.card, status, updatedAt: now, evolution: [...stored.card.evolution, { at: now, action: status === "orphaned" ? "orphaned" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: "anchor review", summary: resolution.reason === "changed" ? "关联的代码已被大幅修改，标记为待复核" : "找不到原来关联的代码，标记为待复核" }] };
+        const updated: KnowledgeCard = { ...stored.card, status, updatedAt: now, evolution: [...stored.card.evolution, { at: now, action: status === "orphaned" ? "orphaned" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: "anchor review", summary: resolution.reason === "changed" ? L("关联的代码已被大幅修改，标记为待复核") : L("找不到原来关联的代码，标记为待复核") }] };
         await saveCard(updated); event(updated.id, "knowledge_card_updated", actor); changed.push(updated);
         for (const memberId of new Set([updated.ownerMemberId, ...(updated.review?.confirmedBy ?? [])])) {
           if (!memberId) continue;
@@ -806,9 +807,9 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
       if (stored.card.scope !== "team" || target.card.scope !== "team" || stored.card.status !== "reviewed" || target.card.status !== "reviewed") throw new Error("Relations require reviewed team cards");
       const now = Date.now();
       const relations = [...(stored.card.relations ?? []).filter((item) => item.cardId !== relation.cardId), relation];
-      const relationLabels = { contradicts: "存在矛盾", supersedes: "替代", duplicates: "内容重复", refines: "补充说明" };
-      const updated: KnowledgeCard = { ...stored.card, relations, updatedAt: now, evolution: [...stored.card.evolution, { at: now, action: relation.kind === "supersedes" ? "superseded" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: `${relation.kind}:${relation.cardId}`, summary: `与「${target.card.title}」建立${relationLabels[relation.kind]}关系` }] };
-      const targetUpdated: KnowledgeCard = relation.kind === "supersedes" ? { ...target.card, status: "superseded", updatedAt: now, evolution: [...target.card.evolution, { at: now, action: "superseded", by: { peerId: actor.memberId, name: actor.displayName }, note: id, summary: `被「${stored.card.title}」替代，标记为已取代` }] } : target.card;
+      const relationLabels = { contradicts: L("存在矛盾"), supersedes: L("替代"), duplicates: L("内容重复"), refines: L("补充说明") };
+      const updated: KnowledgeCard = { ...stored.card, relations, updatedAt: now, evolution: [...stored.card.evolution, { at: now, action: relation.kind === "supersedes" ? "superseded" : "updated", by: { peerId: actor.memberId, name: actor.displayName }, note: `${relation.kind}:${relation.cardId}`, summary: L("与「{0}」建立{1}关系", target.card.title, relationLabels[relation.kind]) }] };
+      const targetUpdated: KnowledgeCard = relation.kind === "supersedes" ? { ...target.card, status: "superseded", updatedAt: now, evolution: [...target.card.evolution, { at: now, action: "superseded", by: { peerId: actor.memberId, name: actor.displayName }, note: id, summary: L("被「{0}」替代，标记为已取代", stored.card.title) }] } : target.card;
       await saveCard(updated); if (targetUpdated !== target.card) await saveCard(targetUpdated); event(updated.id, "knowledge_card_updated", actor); if (targetUpdated !== target.card) event(targetUpdated.id, "knowledge_card_updated", actor); return updated;
     });
   }
@@ -838,14 +839,14 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
   function personalizeDemoCards(cards: KnowledgeCard[], file: string) {
     if (file !== "src/projectStatus.js") return cards;
     const templates: Record<KnowledgeCardType, Pick<KnowledgeCard, "title" | "summary" | "content">> = {
-      decision: { title: "集中计算任务状态", summary: "createProjectStatus 计算任务数量、完成数量与下一项任务。", content: "createProjectStatus 从 tasks 计算 taskCount、completedCount 和 nextTask。formatProjectStatus 使用这个结果生成终端输出，任务状态规则集中在 createProjectStatus 中。" },
-      constraint: { title: "保持任务字段含义", summary: "tasks 的 completed 表示完成状态，title 用于下一项任务的显示。", content: "createProjectStatus 使用 completed 筛选已完成任务，再读取首个未完成任务的 title。调用方应提供含有 boolean completed 和文本 title 的任务对象，并保持这两个字段的含义。" },
-      risk: { title: "注意下一项任务的顺序", summary: "nextTask 使用第一个未完成任务，任务顺序会影响显示结果。", content: "tasks.find 返回第一个未完成任务。当这个任务没有 title，或者全部任务已完成时，nextTask 显示 All tasks complete。修改任务顺序或字段时需要核对这个显示结果。" },
-      context: { title: "任务状态模块的用途", summary: "projectStatus.js 将任务列表转换为状态对象和四行终端文本。", content: "Demo 工作区使用 createProjectStatus 生成任务数量、完成数量和下一项任务，再由 formatProjectStatus 输出工作区名称、Tasks、Completed 和 Next 四行文本。" },
-      negative: { title: "保持状态计算与文本格式的职责", summary: "formatProjectStatus 接收状态对象，重复计算任务状态会增加维护成本。", content: "formatProjectStatus 已经通过 status.taskCount、status.completedCount 和 status.nextTask 格式化输出。维护这个接口可以让任务计算规则集中在 createProjectStatus 中，减少规则重复。" },
-      tutorial: { title: "阅读任务状态代码", summary: "从 createProjectStatus 的返回字段开始，继续阅读 formatProjectStatus。", content: "阅读 tasks.length、filter 和 find 如何生成三个状态字段，再查看 formatProjectStatus 如何把它们写入数组并通过 join 生成四行文本。可以运行 Demo 工作区的测试核对任务完成和未完成时的结果。" }
+      decision: { title: L("集中计算任务状态"), summary: L("createProjectStatus 计算任务数量、完成数量与下一项任务。"), content: L("createProjectStatus 从 tasks 计算 taskCount、completedCount 和 nextTask。formatProjectStatus 使用这个结果生成终端输出，任务状态规则集中在 createProjectStatus 中。") },
+      constraint: { title: L("保持任务字段含义"), summary: L("tasks 的 completed 表示完成状态，title 用于下一项任务的显示。"), content: L("createProjectStatus 使用 completed 筛选已完成任务，再读取首个未完成任务的 title。调用方应提供含有 boolean completed 和文本 title 的任务对象，并保持这两个字段的含义。") },
+      risk: { title: L("注意下一项任务的顺序"), summary: L("nextTask 使用第一个未完成任务，任务顺序会影响显示结果。"), content: L("tasks.find 返回第一个未完成任务。当这个任务没有 title，或者全部任务已完成时，nextTask 显示 All tasks complete。修改任务顺序或字段时需要核对这个显示结果。") },
+      context: { title: L("任务状态模块的用途"), summary: L("projectStatus.js 将任务列表转换为状态对象和四行终端文本。"), content: L("Demo 工作区使用 createProjectStatus 生成任务数量、完成数量和下一项任务，再由 formatProjectStatus 输出工作区名称、Tasks、Completed 和 Next 四行文本。") },
+      negative: { title: L("保持状态计算与文本格式的职责"), summary: L("formatProjectStatus 接收状态对象，重复计算任务状态会增加维护成本。"), content: L("formatProjectStatus 已经通过 status.taskCount、status.completedCount 和 status.nextTask 格式化输出。维护这个接口可以让任务计算规则集中在 createProjectStatus 中，减少规则重复。") },
+      tutorial: { title: L("阅读任务状态代码"), summary: L("从 createProjectStatus 的返回字段开始，继续阅读 formatProjectStatus。"), content: L("阅读 tasks.length、filter 和 find 如何生成三个状态字段，再查看 formatProjectStatus 如何把它们写入数组并通过 join 生成四行文本。可以运行 Demo 工作区的测试核对任务完成和未完成时的结果。") }
     };
-    return cards.map(card => ({ ...card, ...templates[card.type], tags: ["demo", card.type, "project-status"], evolution: card.evolution.map(entry => ({ ...entry, note: "示例知识：任务状态导览。" })) }));
+    return cards.map(card => ({ ...card, ...templates[card.type], tags: ["demo", card.type, "project-status"], evolution: card.evolution.map(entry => ({ ...entry, note: L("示例知识：任务状态导览。") })) }));
   }
 
   return {
@@ -872,14 +873,14 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
         return card;
       });
     },
-    recordRecurrence(actor: KnowledgeActor, id: string, suggestionId: string, sourceDescription = "知识建议") {
+    recordRecurrence(actor: KnowledgeActor, id: string, suggestionId: string, sourceDescription = L("知识建议")) {
       return enqueue(async () => {
         const card = await get(actor, id);
         if (!card || card.status !== "reviewed") throw new KnowledgeCardNotFoundError("Reviewed knowledge card not found");
         if (card.evolution.some(entry => entry.action === "recurrence" && entry.note === suggestionId)) return card;
         const now = Date.now();
         const count = (card.usage?.recurrenceCount ?? 0) + 1;
-        const updated: KnowledgeCard = { ...card, updatedAt: now, usage: { injectedCount: 0, toolHitCount: 0, ...card.usage, recurrenceCount: count }, evolution: [...card.evolution, { at: now, action: "recurrence", by: { peerId: actor.memberId, name: actor.displayName }, note: suggestionId, summary: `作为复现记录第 ${count} 次（来源：${sourceDescription}）` }] };
+        const updated: KnowledgeCard = { ...card, updatedAt: now, usage: { injectedCount: 0, toolHitCount: 0, ...card.usage, recurrenceCount: count }, evolution: [...card.evolution, { at: now, action: "recurrence", by: { peerId: actor.memberId, name: actor.displayName }, note: suggestionId, summary: L("作为复现记录第 {0} 次（来源：{1}）", count, sourceDescription) }] };
         await saveCard(updated);
         event(id, "knowledge_card_updated", actor);
         return updated;
@@ -895,7 +896,7 @@ export function createKnowledgeService(options: KnowledgeServiceOptions) {
     async selectionEvidence(file: string, selection: KnowledgeAnchorSelection) {
       const current = await currentDocument(file);
       const offsets = offsetsFromRange(current.text, toTextRange(selection));
-      if (!offsets || offsets.endOffset <= offsets.startOffset) throw new Error("请在编辑器中选择需要作为证据的代码");
+      if (!offsets || offsets.endOffset <= offsets.startOffset) throw new Error(L("请在编辑器中选择需要作为证据的代码"));
       return { file: normalizeWorkspaceRelativePath(file), text: current.text.slice(offsets.startOffset, offsets.endOffset).slice(0, 8000) };
     },
     refreshExpired,

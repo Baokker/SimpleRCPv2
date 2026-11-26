@@ -21,6 +21,7 @@ import type {
   KnowledgeAnchorResolution
 } from "../types";
 import type { ThemeMode } from "../theme";
+import { L } from "../i18n/legacy";
 
 self.MonacoEnvironment = {
   getWorker(_moduleId, label) { return label === "typescript" || label === "javascript" ? new TypeScriptWorker() : new EditorWorker(); }
@@ -138,7 +139,7 @@ export function EditorArea({
         const openLink = `command:${openCommand}?${encodeURIComponent(JSON.stringify([card.id]))}`;
         const reanchorLink = `command:${reanchorCommand}?${encodeURIComponent(JSON.stringify([{ cardId: card.id, anchorIndex: resolution.anchorIndex }]))}`;
         const hoverMessage = {
-          value: `**${escapeKnowledgeMarkdown(card.title)}**\n\n${escapeKnowledgeMarkdown(card.summary)}\n\n类型：${knowledgeTypes[card.type].label}\n\n作用域：${knowledgeScopes[card.scope ?? "team"]}\n\n状态：${knowledgeStatuses[card.status]}\n\n作者：${escapeKnowledgeMarkdown(card.provenance?.author.displayName ?? "未知成员")}\n\n[打开卡片](${openLink})${resolution.status === "needsReview" && canManage ? `\n\n[用当前选区重新锚定](${reanchorLink})` : ""}`,
+          value: L("**{0}**\n\n{1}\n\n类型：{2}\n\n作用域：{3}\n\n状态：{4}\n\n作者：{5}\n\n[打开卡片]({6}){7}", escapeKnowledgeMarkdown(card.title), escapeKnowledgeMarkdown(card.summary), knowledgeTypes[card.type].label, knowledgeScopes[card.scope ?? "team"], knowledgeStatuses[card.status], escapeKnowledgeMarkdown(card.provenance?.author.displayName ?? L("未知成员")), openLink, resolution.status === "needsReview" && canManage ? L("\n\n[用当前选区重新锚定]({0})", reanchorLink) : ""),
           isTrusted: { enabledCommands: [openCommand, reanchorCommand] }
         };
         return {
@@ -221,14 +222,14 @@ export function EditorArea({
                 const knowledgeActions: Monaco.IDisposable[] = [];
                 knowledgeActions.push(editor.addAction({
                   id: "knowledge.openCard",
-                  label: "打开知识卡片",
+                  label: L("打开知识卡片"),
                   run: (_editor, cardId: string) => {
                     if (knowledgeStateRef.current.cards.some(card => card.id === cardId)) window.dispatchEvent(new CustomEvent("knowledge-open-card", { detail: cardId }));
                   }
                 }));
                 knowledgeActions.push(editor.addAction({
                   id: "knowledge.reanchor",
-                  label: "用当前选区重新锚定",
+                  label: L("用当前选区重新锚定"),
                   run: async (_editor, input?: { cardId: string; anchorIndex: number }) => {
                     if (!input) return;
                     const { cardId, anchorIndex } = input;
@@ -244,7 +245,7 @@ export function EditorArea({
                 }));
                 knowledgeActions.push(editor.addAction({
                   id: "knowledge.pin",
-                  label: "Pin 为知识卡片",
+                  label: L("Pin 为知识卡片"),
                   contextMenuGroupId: "navigation",
                   contextMenuOrder: 1,
                   keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyK],

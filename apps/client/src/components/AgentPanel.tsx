@@ -40,6 +40,7 @@ import { AgentRunProgress, AgentRunStatus } from "./AgentRunProgress";
 import { AgentQuestions } from "./AgentQuestions";
 import { AgentResponse } from "./AgentResponse";
 import { AgentWorkDetails } from "./AgentWorkDetails";
+import { L } from "../i18n/legacy";
 
 const ACTIVE_STATUSES = new Set<AgentRun["status"]>(["queued", "running"]);
 
@@ -451,11 +452,11 @@ export function AgentPanel({
       </ol>
 
       <div className="agent-composer">
-        {reviewKnowledge.length ? <div className="agent-knowledge-preview" data-testid="agent-knowledge-needs-review"><p>有 {reviewKnowledge.length} 张相关卡片待复核，未提供给 Agent</p><div className="workspace-dialog-actions">{reviewKnowledge.map(card => <button key={card.id} onClick={() => window.dispatchEvent(new CustomEvent("knowledge-open-card", { detail: card.id }))}>复核「{card.title}」</button>)}</div></div> : null}
+        {reviewKnowledge.length ? <div className="agent-knowledge-preview" data-testid="agent-knowledge-needs-review"><p>{L("有")} {reviewKnowledge.length} {L("张相关卡片待复核，未提供给 Agent")}</p><div className="workspace-dialog-actions">{reviewKnowledge.map(card => <button key={card.id} onClick={() => window.dispatchEvent(new CustomEvent("knowledge-open-card", { detail: card.id }))}>{L("复核「")}{card.title}」</button>)}</div></div> : null}
         {knowledgePreview.length ? (
           <div className="agent-knowledge-preview" data-testid="agent-knowledge-preview">
-            <header><strong>将参考的知识</strong><span className="ui-badge">{knowledgePreview.filter(card => !excludedKnowledge.has(card.id)).length} 条已选</span></header>
-            <p>取消勾选后，这条知识不会提供给本次任务。</p>
+            <header><strong>{L("将参考的知识")}</strong><span className="ui-badge">{knowledgePreview.filter(card => !excludedKnowledge.has(card.id)).length} {L("条已选")}</span></header>
+            <p>{L("取消勾选后，这条知识不会提供给本次任务。")}</p>
             <ul>
               {knowledgePreview.map((card) => (
                 <li key={card.id}>
@@ -471,7 +472,7 @@ export function AgentPanel({
                       })}
                     />
                     <span className="agent-knowledge-preview-title">{card.title}</span>
-                    <small>{card.chars} 字符</small>
+                    <small>{card.chars} {L("字符")}</small>
                   </label>
                 </li>
               ))}
@@ -617,7 +618,7 @@ function AgentMessage({
               <button type="button" onClick={() => onOpenFile(change.file)}>
                 <FileCode2 size={13} />
                 <span>{change.file}</span>
-                <small className="file-change-counts"><span className="ui-badge success">新增 {change.additions} 行</span><span className="ui-badge error">删除 {change.deletions} 行</span></small>
+                <small className="file-change-counts"><span className="ui-badge success">{L("新增")} {change.additions} {L("行")}</span><span className="ui-badge error">{L("删除")} {change.deletions} {L("行")}</span></small>
               </button>
             </li>
           ))}

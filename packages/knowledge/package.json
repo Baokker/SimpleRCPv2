@@ -13,6 +13,10 @@
       "types": "./dist/src/util/content.d.ts",
       "default": "./dist/src/util/content.js"
     },
+    "./util/lang": {
+      "types": "./dist/src/util/lang.d.ts",
+      "default": "./dist/src/util/lang.js"
+    },
     ".": {
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"

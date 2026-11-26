@@ -73,7 +73,7 @@ export const defaultKnowledgeProviderConfig: KnowledgeProviderConfig = {
   toolEnabled: true,
   toolInstructionPlacement: "prompt",
   proposeEnabled: false,
-  recapLanguage: "zh",
+  recapLanguage: process.env.KNOWLEDGE_LANG === "en" ? "en" : "zh",
   topK: 5,
   maxCharsPerCard: 800,
   maxTotalChars: 4000,

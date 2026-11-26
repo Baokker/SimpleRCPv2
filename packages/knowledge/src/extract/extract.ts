@@ -8,6 +8,7 @@ import type { KnowledgeCardType, KnowledgeAppliesTo } from '../schema/card.js';
 import type { LlmClient } from '../llm/client.js';
 import { knowledgeExtractionSystemPrompt } from './prompt.js';
 import { removeKnowledgeEvidenceBlocks } from '../util/content.js';
+import { L } from "../util/lang.js";
 
 export interface KnowledgeExtractionInput {
     triggerType: string;
@@ -384,7 +385,7 @@ function createHeuristicFallbackDraft(input: KnowledgeExtractionInput): Knowledg
     const citations: string[] = [];
     const tags: string[] = [];
 
-    unknowns.push('修改原因及效果需要根据记录的证据核对。');
+    unknowns.push(L("修改原因及效果需要根据记录的证据核对。"));
 
     const addCitationIf = (path: string, value: unknown) => {
         if (typeof value !== 'undefined' && value !== null) {
@@ -545,16 +546,16 @@ function createHeuristicFallbackDraft(input: KnowledgeExtractionInput): Knowledg
         case 'edit.overwritten': {
             addCitationIf('evidence.overwritten[0].originalText', evidence.overwritten?.[0]?.originalText);
             addCitationIf('evidence.replacement', evidence.replacement);
-            summary = summary || `${String(evidence.editor ?? '')} 改写了 ${String(evidence.author ?? '')} 在 ${String(evidence.file ?? '')} 中的内容。`;
+            summary = summary || L("{0} 改写了 {1} 在 {2} 中的内容。", String(evidence.editor ?? ''), String(evidence.author ?? ''), String(evidence.file ?? ''));
             contentLines = [
-                '## 编辑证据',
-                `文件：${String(evidence.file ?? '')}`,
-                `作者：${String(evidence.author ?? '')}；改写者：${String(evidence.editor ?? '')}；间隔：${Number(evidence.elapsedMs ?? 0)} ms`,
+                L("## 编辑证据"),
+                L("文件：{0}", String(evidence.file ?? '')),
+                L("作者：{0}；改写者：{1}；间隔：{2} ms", String(evidence.author ?? ''), String(evidence.editor ?? ''), Number(evidence.elapsedMs ?? 0)),
                 '```', String(evidence.overwritten?.[0]?.originalText ?? ''), '```',
-                '## 改写内容', '```', String(evidence.replacement ?? ''), '```',
-                '## 需要确认', '请补充改写原因与双方接受的规则。'
+                L("## 改写内容"), '```', String(evidence.replacement ?? ''), '```',
+                L("## 需要确认"), L("请补充改写原因与双方接受的规则。")
             ];
-            unknowns.push('改写的原因需要参与成员确认。');
+            unknowns.push(L("改写的原因需要参与成员确认。"));
             break;
         }
         case 'rollback.detected': {
@@ -594,12 +595,12 @@ function createHeuristicFallbackDraft(input: KnowledgeExtractionInput): Knowledg
                 addCitationIf(`evidence.chatMessages[${index}].text`, msgs[index]?.text);
                 addCitationIf(`evidence.chatMessages[${index}].authorId`, msgs[index]?.authorId);
             }
-            summary = summary || '请核对原始讨论，填写可复用的结论。';
+            summary = summary || L("请核对原始讨论，填写可复用的结论。");
             contentLines = [
-                '## 待确认内容',
-                '请根据原始讨论填写已经确认的决策、约束或操作方法。原始讨论可以在编辑器的“原始证据”中查看。'
+                L("## 待确认内容"),
+                L("请根据原始讨论填写已经确认的决策、约束或操作方法。原始讨论可以在编辑器的“原始证据”中查看。")
             ];
-            unknowns.push('讨论中的最终决定及其依据需要人工确认。');
+            unknowns.push(L("讨论中的最终决定及其依据需要人工确认。"));
             break;
         }
     }

@@ -22,6 +22,7 @@ import { createEditAttribution, deltaOperations } from "./attribution.js";
 import { redactSensitive } from "../agent/traceStore.js";
 import type { ImportedDraft } from "./documentIO.js";
 import {enrichRecapEvidence} from "./recapEvidence.js";
+import { L, knowledgeLanguage } from "@simplercp/knowledge/util/lang";
 
 type EventInput<T = CaptureEvent> = T extends CaptureEvent ? Omit<T, "seq" | "at" | "schemaVersion"> : never;
 export interface CaptureServiceOptions {
@@ -98,7 +99,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
   let recapMode = options.recapMode;
   let agentSelfRecap = options.agentSelfRecap;
   const agentRunChanges = new Map<string, CaptureAgentFileChange[]>();
-  let recapLanguage = options.recapLanguage ?? "zh";
+  let recapLanguage = options.recapLanguage ?? knowledgeLanguage();
   const engine = createCaptureEngine({ clock, config: options.config,
     onSuggestion(suggestion) { if (!recovering) enqueue(() => storeSuggestion(suggestion)); },
     onCheckpoint(checkpoint) {
@@ -390,7 +391,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
           checkValidation = parsed.checkValidation;
           completed = true;
           fallback = false;
-          return { draft: { type: parsed.type, title: parsed.title, summary: parsed.summary, content: [`## 发生了什么`, parsed.whatHappened, `## 纠正`, parsed.correction, `## 规则`, parsed.rule, `## 适用范围`, [...parsed.appliesTo.files, ...parsed.appliesTo.globs, ...parsed.appliesTo.taskKinds].join(", ") || "当前任务", `## 不适用的情况`, parsed.notApplicable, ...parsed.unknowns].join("\n\n"), tags: [suggestion.triggerType, "agent"], confidence: parsed.confidence, evidenceCitations: parsed.evidenceCitations, unknowns: parsed.unknowns, ...recapCardFields(parsed), fallback: false }, fallback: false };
+          return { draft: { type: parsed.type, title: parsed.title, summary: parsed.summary, content: [L("## 发生了什么"), parsed.whatHappened, L("## 纠正"), parsed.correction, L("## 规则"), parsed.rule, L("## 适用范围"), [...parsed.appliesTo.files, ...parsed.appliesTo.globs, ...parsed.appliesTo.taskKinds].join(", ") || L("当前任务"), L("## 不适用的情况"), parsed.notApplicable, ...parsed.unknowns].join("\n\n"), tags: [suggestion.triggerType, "agent"], confidence: parsed.confidence, evidenceCitations: parsed.evidenceCitations, unknowns: parsed.unknowns, ...recapCardFields(parsed), fallback: false }, fallback: false };
         }
         const recap = await extractAgentRecapDraft(suggestion.evidence, {
           model: llmModel ?? "deterministic",
@@ -409,7 +410,7 @@ export function createCaptureService(options: CaptureServiceOptions) {
         modelDraft = recap.draft;
         checkValidation = recap.draft.checkValidation;
         if (recap.fallback && isLlmQuotaFailure(recap.failureReason)) throw new Error(`Model quota interruption: ${recap.failureReason}`);
-        return { draft: { type: recap.draft.type, title: recap.draft.title, summary: recap.draft.summary, content: [`## 发生了什么`, recap.draft.whatHappened, `## 纠正`, recap.draft.correction, `## 规则`, recap.draft.rule, `## 适用范围`, [...recap.draft.appliesTo.files, ...recap.draft.appliesTo.globs, ...recap.draft.appliesTo.taskKinds].join(", ") || "当前任务", `## 不适用的情况`, recap.draft.notApplicable, ...recap.draft.unknowns].join("\n\n"), tags: [suggestion.triggerType, "agent"], confidence: recap.draft.confidence, evidenceCitations: recap.draft.evidenceCitations, unknowns: recap.draft.unknowns, ...recapCardFields(recap.draft) }, fallback: recap.fallback };
+        return { draft: { type: recap.draft.type, title: recap.draft.title, summary: recap.draft.summary, content: [L("## 发生了什么"), recap.draft.whatHappened, L("## 纠正"), recap.draft.correction, L("## 规则"), recap.draft.rule, L("## 适用范围"), [...recap.draft.appliesTo.files, ...recap.draft.appliesTo.globs, ...recap.draft.appliesTo.taskKinds].join(", ") || L("当前任务"), L("## 不适用的情况"), recap.draft.notApplicable, ...recap.draft.unknowns].join("\n\n"), tags: [suggestion.triggerType, "agent"], confidence: recap.draft.confidence, evidenceCitations: recap.draft.evidenceCitations, unknowns: recap.draft.unknowns, ...recapCardFields(recap.draft) }, fallback: recap.fallback };
       }
       const draft = await extractKnowledgeCardDraft({
         triggerType: suggestion.triggerType, suggestedType: suggestion.suggestedType,
@@ -532,8 +533,8 @@ export function createCaptureService(options: CaptureServiceOptions) {
     },
     async merge(actor: KnowledgeActor, id: string, cardId: string) {
       return withSuggestion(id, async suggestion => {
-        const source = suggestion.triggerType === "chat.dense" ? "聊天" : suggestion.origin === "human-agent" || suggestion.origin === "agent-self" ? "Agent 协作" : suggestion.origin === "preset" ? "规范文档" : "代码编辑";
-        const card = await options.knowledge.recordRecurrence(actor, cardId, id, `${source} ${new Date(suggestion.createdAt).toLocaleString("zh-CN")}`);
+        const source = suggestion.triggerType === "chat.dense" ? L("聊天") : suggestion.origin === "human-agent" || suggestion.origin === "agent-self" ? L("Agent 协作") : suggestion.origin === "preset" ? L("规范文档") : L("代码编辑");
+        const card = await options.knowledge.recordRecurrence(actor, cardId, id, `${source} ${new Date(suggestion.createdAt).toLocaleString(knowledgeLanguage() === "en" ? "en-US" : "zh-CN")}`);
         await resolve(actor, suggestion, "merged");
         return { card, suggestion };
       });
@@ -556,12 +557,12 @@ export function createCaptureService(options: CaptureServiceOptions) {
       const counts = new Map<string, number>();
       for (const message of messages) counts.set(message.authorId, (counts.get(message.authorId) ?? 0) + 1);
       const primaryActor = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]![0];
-      const suggestion: CaptureSuggestion = { id: crypto.randomUUID(), triggerType: "chat.dense", createdAt: at, origin: "human-human", state: "open", actors: { memberIds: [...new Set([actor.memberId, ...messages.map(message => message.authorId)])], runIds: [] }, suggestedType: "context", suggestedTitle: "选定的协作讨论", suggestedSummary: messages.map(message => message.text).join("\n").slice(0, 400), evidence: { chatMessages: messages, primaryActor }, suggestedAnchors: engine.infer(messages, at) };
+      const suggestion: CaptureSuggestion = { id: crypto.randomUUID(), triggerType: "chat.dense", createdAt: at, origin: "human-human", state: "open", actors: { memberIds: [...new Set([actor.memberId, ...messages.map(message => message.authorId)])], runIds: [] }, suggestedType: "context", suggestedTitle: L("选定的协作讨论"), suggestedSummary: messages.map(message => message.text).join("\n").slice(0, 400), evidence: { chatMessages: messages, primaryActor }, suggestedAnchors: engine.infer(messages, at) };
       return storeSuggestion(suggestion);
     },
     async importPreset(actor: KnowledgeActor, input: ImportedDraft & { file: string; sourceText: string }) {
       await awaitIdle();
-      const suggestion: CaptureSuggestion = { id: crypto.randomUUID(), triggerType: "preset.imported", createdAt: Date.now(), origin: "preset", state: "open", actors: { memberIds: [actor.memberId], runIds: [] }, suggestedType: input.type, suggestedTitle: input.title, suggestedSummary: input.summary, suggestedAnchors: [{ file: input.file, startLine: input.startLine, endLine: input.endLine, score: 1, reasons: ["规范文档原文"] }], evidence: { file: input.file, lineRange: { start: input.startLine, end: input.endLine }, sourceText: input.sourceText, draft: input, fallback: input.fallback } };
+      const suggestion: CaptureSuggestion = { id: crypto.randomUUID(), triggerType: "preset.imported", createdAt: Date.now(), origin: "preset", state: "open", actors: { memberIds: [actor.memberId], runIds: [] }, suggestedType: input.type, suggestedTitle: input.title, suggestedSummary: input.summary, suggestedAnchors: [{ file: input.file, startLine: input.startLine, endLine: input.endLine, score: 1, reasons: [L("规范文档原文")] }], evidence: { file: input.file, lineRange: { start: input.startLine, end: input.endLine }, sourceText: input.sourceText, draft: input, fallback: input.fallback } };
       return enqueue(() => storeSuggestion(suggestion));
     },
     async propose(actor: KnowledgeActor, runId: string, input: Pick<ImportedDraft, "title" | "summary" | "content" | "type" | "files">) {

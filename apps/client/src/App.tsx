@@ -53,6 +53,7 @@ import { useWorkspaceNotifications } from "./hooks/useWorkspaceNotifications";
 import { useI18n } from "./i18n";
 import { errorText } from "./i18n/messages";
 import { readLocalStorage, writeLocalStorage } from "./localStorage";
+import { L } from "./i18n/legacy";
 import {
   connectRoomSocket,
   type ClientSocket,
@@ -1110,9 +1111,9 @@ function WorkspacePage({
         />
       </aside>
       {knowledgeWarning ? <div className="knowledge-warning workspace-dialog-actions" role="status" data-testid="knowledge-risk-warning">
-        <span>风险提醒：{knowledgeCards.find(card => card.id === knowledgeWarning.cardId)?.title ?? knowledgeWarning.file}</span>
-        <button onClick={() => { const card = knowledgeCards.find(candidate => candidate.id === knowledgeWarning.cardId); if (card) window.dispatchEvent(new CustomEvent("knowledge-open-card", { detail: card.id })); if (knowledgeWarning.warningId) void markKnowledgeWarningsRead(projectId, [knowledgeWarning.warningId]).catch(showWorkspaceError); setKnowledgeWarning(undefined); }}>打开卡片</button>
-        <button onClick={() => setKnowledgeWarning(undefined)}>关闭</button>
+        <span>{L("风险提醒：")}{knowledgeCards.find(card => card.id === knowledgeWarning.cardId)?.title ?? knowledgeWarning.file}</span>
+        <button onClick={() => { const card = knowledgeCards.find(candidate => candidate.id === knowledgeWarning.cardId); if (card) window.dispatchEvent(new CustomEvent("knowledge-open-card", { detail: card.id })); if (knowledgeWarning.warningId) void markKnowledgeWarningsRead(projectId, [knowledgeWarning.warningId]).catch(showWorkspaceError); setKnowledgeWarning(undefined); }}>{L("打开卡片")}</button>
+        <button onClick={() => setKnowledgeWarning(undefined)}>{L("关闭")}</button>
       </div> : null}
       {terminalEnabled ? (
         <section className="terminal-pane" hidden={!terminalVisible}>

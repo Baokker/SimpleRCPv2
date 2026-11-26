@@ -41,6 +41,7 @@ import type {
 import { formatTime, runStatusText } from "../format";
 import { useI18n } from "../i18n";
 import { richParts, serverText, systemMessageText, type Translate } from "../i18n/messages";
+import { L } from "../i18n/legacy";
 
 type CollaborationTab = "chat" | "agent" | "team" | "project" | "knowledge";
 type ActivityKind =
@@ -259,7 +260,7 @@ export function CollaborationPanel({
             onClick={() => setActiveTab("knowledge")}
             data-testid="collab-tab-knowledge"
           >
-            <BookOpen size={14} />知识 {knowledgeUnread ? <span className="collab-unread-badge" data-testid="knowledge-unread" aria-label={`${knowledgeUnread} 条未读知识`}>{knowledgeUnread}</span> : null}
+            <BookOpen size={14} />{L("知识")} {knowledgeUnread ? <span className="collab-unread-badge" data-testid="knowledge-unread" aria-label={L("{0} 条未读知识", knowledgeUnread)}>{knowledgeUnread}</span> : null}
           </button>
         ) : null}
         <button
@@ -300,7 +301,7 @@ export function CollaborationPanel({
         {activeTab === "chat" ? (
           <section className="collab-section chat-section">
             {knowledgeEnabled ? <div className="chat-knowledge-toolbar workspace-dialog-actions">
-              {chatSelectionMode ? <><span>已选 {selectedChatMessages.length} 条</span><button className="primary" disabled={!selectedChatMessages.length || chatKnowledgeSaving} onClick={async () => { setChatKnowledgeSaving(true); try { await captureKnowledgeFromChat(projectId, selectedChatMessages); setSelectedChatMessages([]); setChatSelectionMode(false); setChatKnowledgeVersion(version => version + 1); setActiveTab("knowledge"); } catch (error) { onError(error); } finally { setChatKnowledgeSaving(false); } }}>{chatKnowledgeSaving ? "创建中" : "从这些消息创建"}</button><button disabled={chatKnowledgeSaving} onClick={() => { setChatSelectionMode(false); setSelectedChatMessages([]); }}>取消</button></> : <button onClick={() => setChatSelectionMode(true)}><BookOpen size={14} />从中创建知识</button>}
+              {chatSelectionMode ? <><span>{L("已选")} {selectedChatMessages.length} {L("条")}</span><button className="primary" disabled={!selectedChatMessages.length || chatKnowledgeSaving} onClick={async () => { setChatKnowledgeSaving(true); try { await captureKnowledgeFromChat(projectId, selectedChatMessages); setSelectedChatMessages([]); setChatSelectionMode(false); setChatKnowledgeVersion(version => version + 1); setActiveTab("knowledge"); } catch (error) { onError(error); } finally { setChatKnowledgeSaving(false); } }}>{chatKnowledgeSaving ? L("创建中") : L("从这些消息创建")}</button><button disabled={chatKnowledgeSaving} onClick={() => { setChatSelectionMode(false); setSelectedChatMessages([]); }}>{L("取消")}</button></> : <button onClick={() => setChatSelectionMode(true)}><BookOpen size={14} />{L("从中创建知识")}</button>}
             </div> : null}
             <div className="team-agent-bar" data-testid="team-agent-bar">
               <strong>{t("teamAgents")}</strong>
@@ -369,7 +370,7 @@ export function CollaborationPanel({
               ) : (
                 chatMessages.map((message) => (
                   <li key={message.id} className={`chat-message chat-message-${message.kind ?? "member"}${knowledgeEnabled && (message.kind ?? "member") === "member" ? " chat-knowledge-message" : ""}`}>
-                    {knowledgeEnabled && chatSelectionMode && (message.kind ?? "member") === "member" ? <input className="chat-knowledge-checkbox" type="checkbox" aria-label={`选择消息 ${message.authorName} ${message.text}`} checked={selectedChatMessages.includes(message.id)} onChange={event => setSelectedChatMessages(ids => event.target.checked ? [...ids, message.id] : ids.filter(id => id !== message.id))} /> : null}
+                    {knowledgeEnabled && chatSelectionMode && (message.kind ?? "member") === "member" ? <input className="chat-knowledge-checkbox" type="checkbox" aria-label={L("选择消息 {0} {1}", message.authorName, message.text)} checked={selectedChatMessages.includes(message.id)} onChange={event => setSelectedChatMessages(ids => event.target.checked ? [...ids, message.id] : ids.filter(id => id !== message.id))} /> : null}
                     <span>
                       <strong>
                         {message.kind === "agent" ? <Bot size={13} /> : null}
