@@ -23,10 +23,10 @@ export function TerminalPanel({
   return (
     <div className="panel terminal-panel">
       <div className="panel-header terminal-header">
-        <span>共享终端</span>
+        <span>Terminal</span>
         <div className="terminal-controls">
           <span className="terminal-state" data-testid="terminal-state">
-            <span>共享</span>{" "}<span className="ui-badge">{({ Connecting: "连接中", Connected: "已连接", Reconnecting: "重新连接中", Offline: "已断开" } as Record<string, string>)[connectionState] ?? connectionState}</span>
+            <span>Shared</span>{" "}<span className="ui-badge">{connectionState}</span>
           </span>
           {connectionState === "Offline" ? (
             <button
@@ -34,14 +34,14 @@ export function TerminalPanel({
               type="button"
               onClick={() => terminalRef.current?.reconnect()}
             >
-              重新连接
+              Reconnect
             </button>
           ) : null}
           <button
             className="terminal-restart"
             onClick={() => terminalRef.current?.restart()}
-            title="重启共享终端"
-            aria-label="重启共享终端"
+            title="Restart shared terminal"
+            aria-label="Restart shared terminal"
             data-testid="terminal-restart"
           >
             <RotateCcw size={14} />

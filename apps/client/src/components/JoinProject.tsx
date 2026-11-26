@@ -63,13 +63,13 @@ export function JoinProject({
         className="join-back"
         onClick={() => window.location.assign("/")}
       >
-        <ArrowLeft size={16} /> 项目列表
+        <ArrowLeft size={16} /> Projects
       </button>
       <form onSubmit={submit} data-testid="join-project-form">
         <h1>{projectName}</h1>
         {participants.length > 0 ? (
           <label>
-            <span>参与者</span>
+            <span>Participant</span>
             <select
               value={memberId}
               onChange={(event) => selectMember(event.target.value)}
@@ -81,12 +81,12 @@ export function JoinProject({
                   {participant.profileRole ? ` (${participant.profileRole})` : ""}
                 </option>
               ))}
-              <option value="new">新建参与者</option>
+              <option value="new">Create a new participant</option>
             </select>
           </label>
         ) : null}
         <label>
-          <span>显示名称</span>
+          <span>Display name</span>
           <input
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
@@ -96,16 +96,16 @@ export function JoinProject({
           />
         </label>
         <label>
-          <span>角色 <small>可选</small></span>
+          <span>Role <small>Optional</small></span>
           <input
             value={role}
             onChange={(event) => setRole(event.target.value)}
-            placeholder="例如设计、开发、审阅"
+            placeholder="Designer, developer, reviewer"
             data-testid="member-role"
           />
         </label>
         <button type="submit" data-testid="join-project">
-          <LogIn size={16} /> 进入项目
+          <LogIn size={16} /> Enter project
         </button>
       </form>
     </main>

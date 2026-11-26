@@ -80,7 +80,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await expect(ada.getByTestId("member-list")).toContainText("Ada");
   await expect(ada.getByTestId("member-list")).toContainText("Linus");
   await expect(ada.getByTestId("activity-feed")).toContainText(
-    "Linus 加入了会话"
+    "Linus joined the session"
   );
 
   await expect(ada.getByTestId("dir-src")).toHaveAttribute(
@@ -145,7 +145,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
 
   await replaceMonacoText(ada, "src/hello.ts", "middle");
   await expectMonacoValue(linus, "src/hello.ts", "middle");
-  await expect(ada.getByTestId("editor-save-status")).toContainText("已保存");
+  await expect(ada.getByTestId("editor-save-status")).toContainText("Saved");
   await Promise.all([
     insertMonacoText(ada, "src/hello.ts", "start", "Ada "),
     insertMonacoText(linus, "src/hello.ts", "end", " Linus")
@@ -166,11 +166,11 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
 
   await expect(ada.getByTestId("new-file")).toHaveAttribute(
     "title",
-    "按路径新建文件"
+    "Create file by path"
   );
   await expect(ada.getByTestId("new-folder")).toHaveAttribute(
     "title",
-    "按路径新建文件夹"
+    "Create folder by path"
   );
   await openWorkspaceDialog(ada, "new-file", "src/browser-created.ts", "src/");
   await expect(ada.getByTestId("file-src/browser-created.ts")).toBeVisible();
@@ -193,7 +193,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   await expect(ada.getByTestId("close-tab-src/browser-renamed.ts")).toHaveCount(0);
   await expect(linus.getByTestId("close-tab-src/browser-renamed.ts")).toHaveCount(0);
   await expect(linus.getByTestId("workspace-notice")).toContainText(
-    "src/browser-renamed.ts 已被删除"
+    "src/browser-renamed.ts was deleted"
   );
   await expect(linus.getByTestId("workspace-notice")).toHaveCount(0, {
     timeout: 6_000
@@ -257,16 +257,16 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
 
   await ada.getByTestId("collab-tab-team").click();
   await expect(ada.getByTestId("activity-feed")).toContainText(
-    "Ada 编辑了 src/hello.ts"
+    "Ada edited src/hello.ts"
   );
-  await expect(ada.getByTestId("activity-feed")).toContainText("第 1-2 行");
+  await expect(ada.getByTestId("activity-feed")).toContainText("Lines 1-2");
   await expect(ada.getByTestId("activity-feed")).not.toContainText("opened src/hello.ts");
   await expect(ada.getByTestId("activity-feed")).not.toContainText(
     "Linus, I updated the greeting."
   );
   await ada.getByTestId("file-src/sample.py").click();
   await expect(ada.locator(".tab.active")).toContainText("src/sample.py");
-  await ada.getByTitle("打开 src/hello.ts").first().click();
+  await ada.getByTitle("Open src/hello.ts").first().click();
   await expect(ada.locator(".tab.active")).toContainText("src/hello.ts");
 
   await ada.getByTestId("collab-tab-team").click();
@@ -288,7 +288,7 @@ test("human collaborators share code, cursors, chat, activity, and terminal", as
   );
   await contextB.close();
   await expect(ada.getByTestId("activity-feed")).toContainText(
-    "Linus 离开了会话"
+    "Linus left the session"
   );
 
   await contextA.close();

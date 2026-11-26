@@ -238,7 +238,7 @@ test.describe("knowledge stage 2", () => {
       const editor = window.__simplercpEditors!["src/hello.ts"]!;
       editor.executeEdits("restore-file", [{ range: editor.getModel()!.getFullModelRange(), text }]);
     }, original.text);
-    await expect(page.getByTestId("editor-save-status")).toHaveText("已保存");
+    await expect(page.getByTestId("editor-save-status")).toHaveText("Saved");
   });
 
   test("团队卡片可见且个人卡片受作用域限制", async ({ browser }) => {

@@ -141,21 +141,21 @@ function ProjectRoute({
   } = useProjectRoute(projectId);
 
   if (loading) {
-    return <main className="route-loading">正在打开项目</main>;
+    return <main className="route-loading">Loading project</main>;
   }
   if (error || !project || (identity && !roomId)) {
     return (
       <main className="route-error" data-testid="route-error">
-        <h1>无法打开项目</h1>
-        <p>{error || "项目不存在"}</p>
+        <h1>Unable to open project</h1>
+        <p>{error || "Project not found"}</p>
         <div>
-          <a href="/" data-testid="route-error-projects">项目列表</a>
+          <a href="/" data-testid="route-error-projects">Projects</a>
           <button
             type="button"
             onClick={retry}
             data-testid="route-error-retry"
           >
-            重试
+            Retry
           </button>
         </div>
       </main>
@@ -372,7 +372,7 @@ function WorkspacePage({
               ...cursors,
               [message.memberId]: {
                 memberId: message.memberId,
-                displayName: collaborator?.displayName ?? "协作者",
+                displayName: collaborator?.displayName ?? "Collaborator",
                 path: message.path,
                 position: message.position,
                 selection: message.selection
@@ -607,14 +607,14 @@ function WorkspacePage({
   function applyWorkspaceChange(change: WorkspaceChange) {
     if (change.type === "rename") {
       remapOpenPath(change.fromPath, change.path);
-      showWorkspaceNotice(`${change.fromPath} 已重命名为 ${change.path}`);
+      showWorkspaceNotice(`${change.fromPath} was renamed to ${change.path}`);
       return;
     }
     if (change.type === "unlink" || change.type === "unlinkDir") {
       closePath(change.path, false);
       pendingSavePathsRef.current.delete(change.path);
       if (pendingSavePathsRef.current.size === 0) setSaveState("Saved");
-      showWorkspaceNotice(`${change.path} 已被删除`);
+      showWorkspaceNotice(`${change.path} was deleted`);
     }
   }
 
@@ -967,15 +967,15 @@ function WorkspacePage({
         <div className="workspace-alert" role="alert" data-testid="workspace-error">
           <span>{workspaceError}</span>
           {projectDeleted ? (
-            <a href="/">项目列表</a>
+            <a href="/">Projects</a>
           ) : (
             <button type="button" onClick={() => window.location.reload()}>
-              重试
+              Retry
             </button>
           )}
           <button
             type="button"
-            aria-label="关闭错误提示"
+            aria-label="Dismiss error"
             onClick={clearWorkspaceError}
           >
             ×
@@ -987,7 +987,7 @@ function WorkspacePage({
           <span>{workspaceNotice}</span>
           <button
             type="button"
-            aria-label="关闭通知"
+            aria-label="Dismiss notification"
             onClick={clearWorkspaceNotice}
           >
             ×
@@ -1112,22 +1112,22 @@ function WorkspacePage({
         </section>
       ) : null}
       <div className="status-bar" data-testid="status-bar">
-        <span data-testid="connection-state">{({ Connecting: "连接中", Connected: "已连接", Reconnecting: "重新连接中", Offline: "已断开" } as Record<string, string>)[connectionState] ?? connectionState}</span>
+        <span data-testid="connection-state">{connectionState}</span>
         {connectionState === "Offline" && !projectDeleted ? (
           <button
             className="connection-retry"
             type="button"
             onClick={() => socketRef.current?.retry()}
           >
-            重新连接
+            Reconnect
           </button>
         ) : null}
-        <span>房间 {roomId || "..."}</span>
-        <span>{member?.displayName ?? "正在加入"}</span>
+        <span>Room {roomId || "..."}</span>
+        <span>{member?.displayName ?? "Joining"}</span>
         <span>{project.name}</span>
         {followingMemberId ? (
           <span>
-            正在跟随 {members.find((candidate) => candidate.id === followingMemberId)?.displayName ?? "协作者"}
+            Following {members.find((candidate) => candidate.id === followingMemberId)?.displayName ?? "collaborator"}
           </span>
         ) : null}
         {terminalEnabled ? (
@@ -1135,8 +1135,8 @@ function WorkspacePage({
             className="status-tool"
             type="button"
             onClick={() => setTerminalVisible((visible) => !visible)}
-            aria-label={`${terminalVisible ? "隐藏" : "显示"}终端`}
-            title={`${terminalVisible ? "隐藏" : "显示"}终端`}
+            aria-label={`${terminalVisible ? "Hide" : "Show"} terminal`}
+            title={`${terminalVisible ? "Hide" : "Show"} terminal`}
             data-testid="toggle-terminal"
           >
             <PanelBottom size={14} />
@@ -1146,8 +1146,8 @@ function WorkspacePage({
           className="status-tool"
           type="button"
           onClick={() => setCollaborationVisible((visible) => !visible)}
-          aria-label={`${collaborationVisible ? "隐藏" : "显示"}协作面板`}
-          title={`${collaborationVisible ? "隐藏" : "显示"}协作面板`}
+          aria-label={`${collaborationVisible ? "Hide" : "Show"} collaboration`}
+          title={`${collaborationVisible ? "Hide" : "Show"} collaboration`}
           data-testid="toggle-collaboration"
         >
           {collaborationVisible ? (
@@ -1167,12 +1167,12 @@ function WorkspacePage({
           {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
         </button>
       </div>
-      <div className="resize-handle resize-handle-workspace" role="separator" aria-orientation="vertical" aria-label="调整文件区宽度" onPointerDown={(event) => startResize("workspace", event)} />
+      <div className="resize-handle resize-handle-workspace" role="separator" aria-orientation="vertical" aria-label="Resize workspace explorer" onPointerDown={(event) => startResize("workspace", event)} />
       {collaborationVisible ? (
-        <div className="resize-handle resize-handle-collaboration" role="separator" aria-orientation="vertical" aria-label="调整协作面板宽度" onPointerDown={(event) => startResize("collaboration", event)} />
+        <div className="resize-handle resize-handle-collaboration" role="separator" aria-orientation="vertical" aria-label="Resize collaboration panel" onPointerDown={(event) => startResize("collaboration", event)} />
       ) : null}
       {terminalVisible && terminalEnabled ? (
-        <div className={`resize-handle resize-handle-terminal${collaborationVisible ? "" : " collaboration-hidden"}`} role="separator" aria-orientation="horizontal" aria-label="调整终端高度" onPointerDown={(event) => startResize("terminal", event)} />
+        <div className={`resize-handle resize-handle-terminal${collaborationVisible ? "" : " collaboration-hidden"}`} role="separator" aria-orientation="horizontal" aria-label="Resize terminal panel" onPointerDown={(event) => startResize("terminal", event)} />
       ) : null}
       {workspaceDialog ? (
         <WorkspaceDialog
