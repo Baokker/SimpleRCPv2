@@ -33,6 +33,9 @@ test("tabs in one browser can choose different project members", async ({
   await secondTab.getByTestId("display-name").fill("Tab Two");
   await secondTab.getByTestId("join-project").click();
   await secondTab.getByTestId("status-bar").waitFor();
+  await expect.poll(() => secondTab.evaluate(() =>
+    window.sessionStorage.getItem("simplercp.memberId.demo")
+  )).not.toBeNull();
   const secondParticipantId = await secondTab.evaluate(() =>
     window.sessionStorage.getItem("simplercp.memberId.demo")
   );
@@ -49,7 +52,9 @@ test("tabs in one browser can choose different project members", async ({
   await expect(firstTab.getByTestId("participant-select")).toHaveValue(firstParticipantId!);
   await firstTab.getByTestId("join-project").click();
   await firstTab.getByTestId("status-bar").waitFor();
-  expect(await firstTab.evaluate(() => sessionStorage.getItem("simplercp.memberId.demo"))).toBe(firstParticipantId);
+  await expect.poll(() => firstTab.evaluate(() =>
+    sessionStorage.getItem("simplercp.memberId.demo")
+  )).toBe(firstParticipantId);
 
   await context.close();
 });
