@@ -1,0 +1,202 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/task",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/tasks",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/complete",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/completion",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/judge",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/evaluate",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/spec",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/instructions",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/help",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/api",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/index",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/readme",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/docs",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/report",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/result",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/submit",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/task",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/docs",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/result",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/status",
+    "body": "{\"result\":1}"
+  },
+  {
+    "method": "POST",
+    "url": "/",
+    "body": "{\"task\":\"todo-cli\"}"
+  },
+  {
+    "method": "GET",
+    "url": "/status?task=demo",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/api/v1/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/completion/check",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/healthz",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/openapi.json",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/.well-known/openapi",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "//",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/STATUS",
+    "body": ""
+  },
+  {
+    "method": "HEAD",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "OPTIONS",
+    "url": "/status",
+    "body": ""
+  }
+]

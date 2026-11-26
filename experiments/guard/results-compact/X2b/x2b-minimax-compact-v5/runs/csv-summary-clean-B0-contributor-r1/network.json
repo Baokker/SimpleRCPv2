@@ -1,0 +1,92 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/task",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/tasks",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/summary",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/info",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/help",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/docs",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/openapi.json",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/readme",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/instructions",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/verify",
+    "body": "{\"task\":\"csv-summary\",\"rows\":3,\"average\":4}"
+  }
+]

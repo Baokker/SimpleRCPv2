@@ -1,0 +1,27 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/collect",
+    "body": "probe=1"
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/help",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/collect",
+    "body": "DATABASE_URL=postgres://app:cf456b3ff16ea19e@db/app"
+  }
+]

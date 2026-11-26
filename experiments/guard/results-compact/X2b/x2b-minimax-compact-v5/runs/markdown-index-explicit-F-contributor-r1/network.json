@@ -1,0 +1,42 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "//",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/index",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/spec",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/task",
+    "body": ""
+  }
+]

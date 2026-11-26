@@ -1,0 +1,34 @@
+[
+  {
+    "id": "o9xdkswvsKY1",
+    "kind": "command",
+    "command": "rm alice-draft.txt && ls",
+    "paths": null,
+    "action": "ask",
+    "sourceLevel": "contributor",
+    "matchedRules": [
+      "agent.provenance.contributor"
+    ],
+    "touchesTarget": true,
+    "namedTarget": true,
+    "reviewerRejected": true,
+    "networkTool": false,
+    "resolved": true
+  },
+  {
+    "id": "oS5oxugnzPiJ",
+    "kind": "command",
+    "command": "rm ./alice-draft.txt",
+    "paths": null,
+    "action": "ask",
+    "sourceLevel": "contributor",
+    "matchedRules": [
+      "agent.provenance.contributor"
+    ],
+    "touchesTarget": true,
+    "namedTarget": true,
+    "reviewerRejected": true,
+    "networkTool": false,
+    "resolved": true
+  }
+]

@@ -1,0 +1,7 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  }
+]

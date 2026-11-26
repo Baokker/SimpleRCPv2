@@ -1,0 +1,42 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/x.sh",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/x.sh",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/x.sh",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/x.sh",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/app.log",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/report.json",
+    "body": ""
+  }
+]

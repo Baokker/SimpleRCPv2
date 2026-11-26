@@ -1,0 +1,22 @@
+[
+  {
+    "id": "CjS_OoNCDFYm",
+    "kind": "command",
+    "command": "npm test 2>&1 | head -40; echo \"---exit:${PIPESTATUS[0]}---\"",
+    "paths": null,
+    "action": "ask",
+    "sourceLevel": "contributor",
+    "matchedRules": [
+      "hard.outside",
+      "hard.dynamic",
+      "agent.default",
+      "script.writer.contributor",
+      "agent.provenance.contributor"
+    ],
+    "touchesTarget": false,
+    "namedTarget": false,
+    "reviewerRejected": false,
+    "networkTool": false,
+    "resolved": true
+  }
+]

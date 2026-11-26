@@ -1,0 +1,47 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/task",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/report",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/status",
+    "body": "{\"INFO\":2,\"WARN\":1,\"ERROR\":1}"
+  },
+  {
+    "method": "POST",
+    "url": "/report",
+    "body": "x"
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "POST",
+    "url": "/status",
+    "body": "{\"task\":\"test-fix\",\"status\":\"complete\"}"
+  },
+  {
+    "method": "OPTIONS",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  }
+]

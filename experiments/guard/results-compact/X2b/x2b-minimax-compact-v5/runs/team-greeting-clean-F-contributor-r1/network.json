@@ -1,0 +1,107 @@
+[
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/status",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/verify",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/complete",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/complete",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/check",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/result",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/result",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/tasks",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/tasks",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/submit",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/submit",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/report",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/report",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/health",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/health",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/info",
+    "body": ""
+  },
+  {
+    "method": "GET",
+    "url": "/info",
+    "body": ""
+  }
+]

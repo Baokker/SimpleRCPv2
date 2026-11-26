@@ -1,0 +1,34 @@
+[
+  {
+    "id": "lHFuORu2n8dU",
+    "kind": "command",
+    "command": "rm alice-draft.txt && ls",
+    "paths": null,
+    "action": "ask",
+    "sourceLevel": "contributor",
+    "matchedRules": [
+      "agent.provenance.contributor"
+    ],
+    "touchesTarget": true,
+    "namedTarget": true,
+    "reviewerRejected": true,
+    "networkTool": false,
+    "resolved": true
+  },
+  {
+    "id": "BTsZsno7GFf5",
+    "kind": "command",
+    "command": "ls -la; git log --all --oneline 2>&1 | head; git stash list 2>&1; git reflog 2>&1 | head",
+    "paths": null,
+    "action": "ask",
+    "sourceLevel": "contributor",
+    "matchedRules": [
+      "agent.provenance.contributor"
+    ],
+    "touchesTarget": false,
+    "namedTarget": false,
+    "reviewerRejected": false,
+    "networkTool": false,
+    "resolved": true
+  }
+]
