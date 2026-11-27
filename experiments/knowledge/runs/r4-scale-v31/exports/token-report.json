@@ -1,0 +1,104 @@
+{
+  "model": "MiniMax-M3",
+  "baseUrl": "https://api.minimaxi.com/v1",
+  "generatedAt": "2026-11-27T04:34:45.316Z",
+  "libraries": {
+    "200": {
+      "file": "trapbench/cards/library-200.json",
+      "repositories": {
+        "R1": {
+          "cards": 200,
+          "chars": 52771,
+          "bytes": 106907,
+          "lines": 1614,
+          "file": "experiments/knowledge/runs/r4-scale-v31/exports/AGENTS-R1-200.md",
+          "tokens": {
+            "ok": true,
+            "durationMs": 3016,
+            "usage": {
+              "promptTokens": 20904,
+              "completionTokens": 219,
+              "cacheReadTokens": 20864,
+              "totalTokens": 21123
+            },
+            "text": "已了解这套团队过程性知识。后续涉及代码修改时，我会遵循以下原则：\n\n- 先识别需求对应的模块、决策、约束与风险，再实施修改。\n- 保持现有数据结构、错误处理入口、返回契约和模块边界。\n- HTTP 路由保持薄层：负责输入校验、参数转换和调用服务，不重复业务规则。\n- 服务层和领域层负责业务状态、权限相关业务规则、并发控制及错误裁决。\n- 存储层负责数据操作，不混入权限策略；读取结果按约定返回隔离副"
+          },
+          "contentTokens": 20727
+        },
+        "R2": {
+          "cards": 200,
+          "chars": 58451,
+          "bytes": 113241,
+          "lines": 1614,
+          "file": "experiments/knowledge/runs/r4-scale-v31/exports/AGENTS-R2-200.md",
+          "tokens": {
+            "ok": true,
+            "durationMs": 3343,
+            "usage": {
+              "promptTokens": 22360,
+              "completionTokens": 232,
+              "cacheReadTokens": 512,
+              "totalTokens": 22592
+            },
+            "text": "已了解。我会依据这份团队过程性知识，在后续任务中重点遵守以下原则：\n\n- 严格遵守各模块的既有契约、文件格式、字段命名与版本约定。\n- 写操作先完成权限、身份、成员关系及路径边界校验。\n- 文件读写使用原子写入、私有权限和受根目录约束的规范化路径。\n- 持久化操作保持顺序、串行化，并正确传播错误。\n- 外部输入实施运行时校验，不以 TypeScript 类型断言代替校验。\n- 读取接口避免泄露内部"
+          },
+          "contentTokens": 22183
+        }
+      }
+    },
+    "500": {
+      "file": "trapbench/cards/library-500.json",
+      "repositories": {
+        "R1": {
+          "cards": 500,
+          "chars": 136118,
+          "bytes": 269734,
+          "lines": 4014,
+          "file": "experiments/knowledge/runs/r4-scale-v31/exports/AGENTS-R1-500.md",
+          "tokens": {
+            "ok": true,
+            "durationMs": 3173,
+            "usage": {
+              "promptTokens": 52795,
+              "completionTokens": 202,
+              "cacheReadTokens": 52794,
+              "totalTokens": 52997
+            },
+            "text": "已收到并理解这些团队过程性知识。后续涉及订单、成员、库存、结算、审计、通知、报表、支付及 HTTP 路由等模块时，我会遵循这些决策、约束和风险边界，尤其注意：\n\n- 金额统一使用整数分，时间按模块约定使用注入时钟。\n- HTTP 路由保持薄层，输入校验与业务规则分别下沉到边界和服务层。\n- 存储依赖通过构造函数注入，并保持只读。\n- 写操作关注并发版本、幂等重放和失败原子性。\n- 查询结果、嵌套 "
+          },
+          "contentTokens": 52618
+        },
+        "R2": {
+          "cards": 500,
+          "chars": 150453,
+          "bytes": 284989,
+          "lines": 4014,
+          "file": "experiments/knowledge/runs/r4-scale-v31/exports/AGENTS-R2-500.md",
+          "tokens": {
+            "ok": true,
+            "durationMs": 4089,
+            "usage": {
+              "promptTokens": 56377,
+              "completionTokens": 123,
+              "cacheReadTokens": 172,
+              "totalTokens": 56500
+            },
+            "text": "已了解并记录这份团队过程性知识。后续我将遵循其中的：\n\n- **决策**：作为实现与设计取舍的优先依据。\n- **约束**：作为必须满足的安全、一致性和兼容性要求。\n- **风险**：作为修改时重点检查的潜在问题。\n- **上下文与教程**：作为实现、测试和迁移时的操作参考。\n- **负向经验**：作为避免重复错误和错误抽象的检查清单。\n\n涉及相关模块时，我会同时核对**错误传播、返回值复制、记录"
+          },
+          "contentTokens": 56200
+        }
+      }
+    }
+  },
+  "baseline": {
+    "ok": true,
+    "durationMs": 1477,
+    "usage": {
+      "promptTokens": 177,
+      "completionTokens": 9,
+      "cacheReadTokens": 128,
+      "totalTokens": 186
+    },
+    "text": "Great! How can I help you?"
+  }
+}

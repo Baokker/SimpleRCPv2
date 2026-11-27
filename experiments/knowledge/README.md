@@ -62,6 +62,8 @@ pnpm --filter @simplercp/experiments experiment k7 --out experiments/knowledge/r
 
 正式运行入口 `formal-run.ts` 使用 `knowledge-exp-freeze-v3.1`，分别核验实验三198条、实验四36条 Tb 与18个共享片段。额度或请求速率限制会停止新任务并取消当前 Agent，中断证据保存在原尝试目录；恢复时已完成组合直接跳过，中断 Tb 使用新的项目，已完成 Ta 保持原片段。重排请求失败直接采用 BM25，不重试。冻结前的真实验收使用 `preflight-v31.ts` 和 `verify-v31.ts`，结果位于 `.work/preflight-v31`，独立于正式结果。
 
+RQ3 扩充知识库的 C1 导出与真实 token 计数使用 `r4b-export.ts`。`--libraries` 指定数据仓库中的 `library-200.json,library-500.json`，`--out` 指定输出目录；脚本调用平台的 `exportAgentsMarkdown` 生成 AGENTS.md，并用一次 MiniMax-M3 请求记录真实 `promptTokens`。数据目录由 `KNOWLEDGE_BENCH_ROOT` 指定。
+
 C6-stale 在实验副本中将过期卡片设为 reviewed，使注入器能够选择它。C7 选择一张指定无关卡片，调整实验副本正文长度，使固定卡片完整格式的字符预算等于 C5，包含标题、摘要、id 和锚点。`knowledge-config.json` 记录卡片 id 与长度差，trace 记录实际注入字符数。冻结卡片文件保持原样。
 
 K2 逐条读取来源 K4 中已经完成的纠正组合，以组合 key 区分重复与条件。缺少来源目录时仅评价脚本知识时刻。迁移草稿使用真实运行、diff、纠正原文或保存的建议证据，Agent 上下文使用纠正后的工作区；脚本代码证据取自对应知识时刻。自动 grounded 检查结构完整、原始响应的全部引用路径存在、正文覆盖指定对象；规则语义由两名标注者评价。结构解析采用产品解析器，引用评价直接读取原始 JSON 中的 evidenceCitations。原始模型响应按输入哈希缓存。续跑保留评分表的已填写内容，补充新增草稿；草稿文字改变时终止。
