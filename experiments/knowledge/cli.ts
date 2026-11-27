@@ -12,13 +12,14 @@ import {judge} from "./client.js";
 const {values, positionals} = parseArgs({allowPositionals: true, options: {
   config: {type: "string"}, out: {type: "string"}, tasks: {type: "string"}, conditions: {type: "string"}, pairs: {type: "string"},
   pilot: {type: "boolean", default: false}, sharedEpisode: {type: "boolean", default: false}, "shared-episode": {type: "boolean", default: false}, online: {type: "boolean", default: false}, calibration: {type: "boolean", default: false},
-  source: {type: "string"}, limit: {type: "string"}, variants: {type: "string"}, workspace: {type: "string"}, protocol: {type: "string"}
+  source: {type: "string"}, limit: {type: "string"}, variants: {type: "string"}, workspace: {type: "string"}, protocol: {type: "string"}, library: {type: "string"}
 }});
 const command = positionals[0];
 if (!["verify", "k1", "k1-compare", "k2", "k3", "k4", "k5", "k7", "judge-stability", "summarize"].includes(command)) throw new Error("Command: verify|k1|k1-compare|k2|k3|k4|k5|k7|judge-stability|summarize");
 const resolveInput = (file: string) => path.resolve(platformRoot, file);
 const config = configSchema.parse(values.config ? await readJson(resolveInput(values.config)) : {});
-const data = await dataset();
+const library = values.library ?? "trapbench/cards/library.json";
+const data = await dataset(library);
 if (values.limit && (!Number.isSafeInteger(Number(values.limit)) || Number(values.limit) <= 0)) throw new Error("--limit must be a positive integer");
 if (command === "verify") {
   console.log(JSON.stringify({manifestHash: data.manifestHash, filesChecked: data.filesChecked, traps: data.tasks.filter(task => task.kind === "trap").length,
@@ -34,7 +35,7 @@ if (command === "verify") {
   await writeJson(path.join(resolveInput(values.source), "summary.json"), groups); console.log(JSON.stringify(groups));
 } else {
   const directory = values.out ? resolveInput(values.out) : path.join(root, "runs", `${command}-${new Date().toISOString().replace(/[:.]/gu, "-")}`);
-  const store = await new RunStore(directory).open(command, config, data);
+  const store = await new RunStore(directory).open(command, config, data, library);
   try {
     if (values.protocol) {
       if (command !== "k5") throw new Error("--protocol is supported for K5");

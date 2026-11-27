@@ -26,7 +26,7 @@ export function registerExperimentRoutes(app: Express, options: {enabled: boolea
   route("post", "cards/import", async (request, response) => {
     const identity = requireIdentity(request, response); if (!identity) return;
     const runtime = manager.get(request.params.projectId);
-    if (!Array.isArray(request.body.cards) || request.body.cards.length > 100) throw new Error("At most 100 cards are allowed");
+    if (!Array.isArray(request.body.cards) || request.body.cards.length > 1000) throw new Error("At most 100 cards are allowed");
     const sources: KnowledgeCard[] = request.body.cards;
     if (sources.some(card => !isKnowledgeCard(card) || !/^[\w-]+$/u.test(card.id))) throw new Error("Import requires valid schema v3 cards");
     const memberMapping = request.body.memberMapping as Record<string, string> | undefined;

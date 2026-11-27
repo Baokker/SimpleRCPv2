@@ -6,7 +6,7 @@ import {parse} from "dotenv";
 import {createApp} from "../../apps/server/src/createApp.js";
 import {loadConfig} from "../../apps/server/src/config.js";
 import {attachRealtimeServer} from "../../apps/server/src/realtime.js";
-import {platformRoot, root} from "./common.js";
+import {benchRoot, platformRoot, root} from "./common.js";
 import {registerExperimentRoutes} from "./server-routes.js";
 import {isQuotaFailure} from "./interruption.js";
 import {redactSensitive} from "../../apps/server/src/agent/traceStore.js";
@@ -18,7 +18,7 @@ const configuration = loadConfig({
   ...parse(await fs.readFile(path.join(platformRoot, ".env"))), ...process.env,
   PORT: process.env.PORT ?? "4179", SIMPLERCP_OPENCODE_PORT: process.env.SIMPLERCP_OPENCODE_PORT ?? "4181",
   SIMPLERCP_DATA_DIR: process.env.SIMPLERCP_DATA_DIR ?? path.join(directory, "data"),
-  SIMPLERCP_IMPORT_ROOTS: path.resolve(platformRoot, ".."),
+  SIMPLERCP_IMPORT_ROOTS: [path.resolve(platformRoot, ".."), benchRoot].join(","),
   SIMPLERCP_TERMINAL_ENABLED: "false", SIMPLERCP_FAKE_AGENT_RUNTIME: "false", KNOWLEDGE: "full", AGENT_LLM_PROVIDER: "minimax"
 });
 const upstream = configuration.agent!;

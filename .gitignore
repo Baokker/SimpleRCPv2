@@ -22,5 +22,6 @@ experiments/knowledge/.work/
 .work/
 experiments/knowledge/runs/*/.runner.lock
 experiments/knowledge/runs/*/raw/
+experiments/knowledge/runs/**/raw/
 experiments/knowledge/analysis/.venv/
 experiments/knowledge/analysis/__pycache__/

@@ -41,7 +41,7 @@ export type Task = {
   targetCardId?: string; irrelevantCardIds?: string[]; variantCardIds?: string[];
   directory: string; prompt: string; [key: string]: any;
 };
-export async function dataset() {
+export async function dataset(libraryPath = "trapbench/cards/library.json") {
   const manifestText = await fs.readFile(path.join(benchRoot, "manifest.json"), "utf8");
   const manifest = JSON.parse(manifestText) as Record<string, string>;
   for (const [relative, expected] of Object.entries(manifest)) {
@@ -50,7 +50,7 @@ export async function dataset() {
     const bytes = information.isSymbolicLink() ? await fs.readlink(file) : await fs.readFile(file);
     if (hash(bytes) !== expected) throw new Error(`Dataset hash mismatch: ${relative}`);
   }
-  const library = await readJson<Array<{repository: string; card: KnowledgeCard}>>(path.join(benchRoot, "trapbench/cards/library.json"));
+  const library = await readJson<Array<{repository: string; card: KnowledgeCard}>>(path.join(benchRoot, libraryPath));
   if (library.some(item => !isKnowledgeCard(item.card))) throw new Error("Dataset card schema is invalid");
   const tasks: Task[] = [];
   for (const entry of await fs.readdir(path.join(benchRoot, "trapbench/tasks"), {withFileTypes: true})) {
@@ -84,7 +84,7 @@ export class RunStore {
   private lock: Awaited<ReturnType<typeof fs.open>> | undefined;
   metadata: Record<string, unknown> = {};
   constructor(readonly directory: string) {}
-  async open(experiment: string, config: ExperimentConfig, data: Dataset) {
+  async open(experiment: string, config: ExperimentConfig, data: Dataset, library = "trapbench/cards/library.json") {
     await fs.mkdir(this.directory, {recursive: true});
     const lockPath = path.join(this.directory, ".runner.lock");
     if (await exists(lockPath)) {
@@ -99,11 +99,11 @@ export class RunStore {
     try {
     await this.lock.writeFile(String(process.pid));
     const commit = (await exec("git", ["rev-parse", "HEAD"], {cwd: platformRoot})).stdout.trim();
-    this.metadata = {experiment, commit, configHash: digest(config), manifestHash: data.manifestHash, provider: config.provider, model: config.model};
+    this.metadata = {experiment, commit, configHash: digest(config), manifestHash: data.manifestHash, library, provider: config.provider, model: config.model};
     const configurationPath = path.join(this.directory, "configuration.json");
     if (await exists(configurationPath)) {
       const previous = await readJson(configurationPath);
-      for (const key of ["experiment", "commit", "configHash", "manifestHash", "provider", "model"]) {
+      for (const key of ["experiment", "commit", "configHash", "manifestHash", "library", "provider", "model"]) {
         if (previous[key] !== this.metadata[key]) throw new Error(`Resume metadata changed: ${key}`);
       }
     } else await writeJson(configurationPath, {...this.metadata, config});

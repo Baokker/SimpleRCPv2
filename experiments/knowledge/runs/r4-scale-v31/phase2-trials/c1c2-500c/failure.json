@@ -1,0 +1,5 @@
+{
+  "at": "2026-11-27T08:18:29.065Z",
+  "command": "k3",
+  "message": "POST /api/projects/0-1eN7KWLIw0/experiments/cards/import: HTTP 400 {\"error\":\"At most 100 cards are allowed\"}"
+}

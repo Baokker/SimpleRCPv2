@@ -1,0 +1,63 @@
+{
+  "generatedAt": "2026-11-27T08:32:33.025Z",
+  "deletedCardIds": [
+    "R1-T01-target",
+    "R1-T02-target",
+    "R1-T03-target",
+    "R1-T04-target",
+    "R1-T05-target",
+    "R2-T01-target",
+    "R2-T02-target",
+    "R2-T03-target",
+    "R2-T04-target",
+    "R2-T05-target"
+  ],
+  "groups": {
+    "C2-NT@40": {
+      "library": "experiments/knowledge/runs/r4-scale-v31/exports/library-40-no-targets.json",
+      "cards": 70,
+      "removed": 10
+    },
+    "C1-NT@40": {
+      "agents": {
+        "R1": {
+          "file": "experiments/knowledge/runs/r4-scale-v31/exports/AGENTS-R1-40-NT.md",
+          "chars": 7077,
+          "cards": 35
+        },
+        "R2": {
+          "file": "experiments/knowledge/runs/r4-scale-v31/exports/AGENTS-R2-40-NT.md",
+          "chars": 7356,
+          "cards": 35
+        }
+      },
+      "cards": {
+        "R1": 35,
+        "R2": 35
+      }
+    },
+    "C2-NT@500": {
+      "library": "experiments/knowledge/runs/r4-scale-v31/exports/library-500-no-targets.json",
+      "cards": 990,
+      "removed": 10
+    },
+    "C1-NT@500": {
+      "agents": {
+        "R1": {
+          "file": "experiments/knowledge/runs/r4-scale-v31/exports/AGENTS-R1-500-NT.md",
+          "chars": 134945,
+          "cards": 495
+        },
+        "R2": {
+          "file": "experiments/knowledge/runs/r4-scale-v31/exports/AGENTS-R2-500-NT.md",
+          "chars": 147303,
+          "cards": 495
+        }
+      },
+      "cards": {
+        "R1": 495,
+        "R2": 495
+      }
+    }
+  }
+}

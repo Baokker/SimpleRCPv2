@@ -1,0 +1,5 @@
+{
+  "at": "2026-11-27T08:18:05.189Z",
+  "command": "k3",
+  "message": "POST /api/projects/import: HTTP 400 {\"error\":\"Directory import path is outside SIMPLERCP_IMPORT_ROOTS\"}"
+}

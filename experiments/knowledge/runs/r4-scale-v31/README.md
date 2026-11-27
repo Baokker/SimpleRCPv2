@@ -1,6 +1,6 @@
-# RQ3 补充实验 · 阶段 1（v2 真实扩充知识库 + 泄露修正）
+# RQ3 补充实验 · 阶段 1–2（知识库、泄露修正、OpenCode 试跑）
 
-状态：阶段 1 完成，等待确认后进入阶段 2。旧模板方案已作废：`knowledge-bench-r4` 分支 `r4-scaled-kb`（提交 `451fa73`）的 `library-200.json` / `library-500.json` 由两种固定模板生成，920 张卡片只差编号，不再用于任何实验；该 worktree 保留作记录，不删除、不引用。
+状态：阶段 2 完成；C1s 在 OpenCode 1.18.31 上不可行，等待确认替代方案后进入阶段 3。旧模板方案已作废：`knowledge-bench-r4` 分支 `r4-scaled-kb`（提交 `451fa73`）的 `library-200.json` / `library-500.json` 由两种固定模板生成，920 张卡片只差编号，不再用于任何实验；该 worktree 保留作记录，不删除、不引用。
 
 ## 分支、提交与 manifest
 
@@ -242,6 +242,62 @@
 - summary：AgentRun 校验过宽，磁盘旧数据可能缺少新增必填字段。
 - content：createAgentRunStore 委托 createRecordStore 持久化 AgentRun，但 validateRecord 仅校验对象及字符串类型的 id、projectId，缺失状态、输入、输出等新增字段仍可写入。读取方按完整 AgentRun 使用时可能得到 undefined，因此新增字段或改变字段含义时，须同步制定 run.json 迁移或更严格校验策略，适用于已有 agent-runs 数据及跨版本升级。
 
+## 阶段 2：OpenCode 读取规则、500 规模试跑与 C1s 结论
+
+### OpenCode 1.18.31 如何读取 AGENTS.md
+
+**源码证据（1.18.31 二进制内的 `InstructionContext.observe`）**：加载指令时调用 `up({targets:["AGENTS.md"], start: currentDirectory, stop: projectRoot})`，再并入全局配置目录的 `AGENTS.md`；`up` 从会话当前目录向项目根目录逐级向上查找。没有向下扫描子目录的逻辑，也没有在读取文件时触发 AGENTS.md 加载的钩子。系统提示只说明“如果 AGENTS.md 为空或不足，可以检查子目录中的 README/AGENTS.md”，即由 Agent 主动用工具读取，不是自动注入。
+
+**实际运行验证**：在临时项目放三份带标记的 AGENTS.md（根 `ROOT_MARKER_12345`、`src/SUBDIR_MARKER_67890`、`src/deep/DEEP_MARKER_24680`），用本地 mock OpenAI provider 捕获 OpenCode 实际发送的请求体。
+
+- 从项目根运行：请求体只含 `ROOT_MARKER_12345`；
+- 从 `src/` 运行（git 根仍在项目根）：含 `ROOT_MARKER_12345` 和 `SUBDIR_MARKER_67890`，不含 `DEEP_MARKER_24680`。
+
+结论：1.18.31 **只在会话开始时加载当前工作目录到项目根路径上的 AGENTS.md**；不会自动加载子目录 AGENTS.md，也不会在访问该目录文件时加载。
+
+### C1s 结论
+
+按原计划把规则写入各目录 AGENTS.md、依赖 OpenCode 自动按路径读取的 C1s 在 1.18.31 上**不可行**，因此没有执行 C1s@40 试跑。可选替代方案（需要确认，不自行决定）：
+
+1. **C1s-prompt（推荐）**：任务开始时按卡片的 `appliesTo`/锚点路径与任务提示中出现的文件匹配，只把匹配规则拼接到根 AGENTS.md 或任务前缀；保留路径范围，且利用 OpenCode 原生根文件加载。属于实验入口改动，不改产品。
+2. **C1s-cwd**：把会话工作目录设到任务主要子目录，OpenCode 会加载该目录及祖先的 AGENTS.md；但任务跨多个目录，工作区根会改变，不适合当前任务。
+3. **C1s-instructions**：在 `opencode.json` 的 `instructions` 中列出所有子目录 AGENTS.md；OpenCode 会在启动时全部加载，效果接近 C1（全量），不构成路径范围。
+4. **C1s-plugin**：写 OpenCode 插件，在读取文件时注入对应目录的 AGENTS.md；最接近按访问加载，但需要改运行时/插件，不是 1.18.31 原生行为。
+
+### 500 张 AGENTS.md 的上下文与截断
+
+C1@500 R1 的 AGENTS.md 为 136,205 字符、52,678 真实 token；C1 首请求实际输入 74,769 token（含系统提示与工具定义），运行完成，无截断/压缩事件。R2 为 148,575 字符、55,793 token，也远低于 MiniMax-M3 的 1M 上下文。500 规模不会因上下文上限被截断。
+
+### C1@500 / C2@500 试跑
+
+任务 `R1-T01`，各 1 次；成功目录 `phase2-trials/c1c2-500d`。
+
+| 条件 | functional | trapAvoided | 首请求输入 token | 累计输入 / 输出 / 缓存读 | 费用（CNY） | Agent 墙钟 / 流水线墙钟 |
+| --- | --- | --- | ---: | --- | ---: | --- |
+| C1@500 | true | true | 74,769 | 104,844 / 4,039 / 1,608,192 | 1.0169 | 315s / 402s |
+| C2@500 | true | true | 22,771 | 72,060 / 6,852 / 962,816 | 0.8201（含重排 0.0290） | 203s / 277s |
+
+C2 注入 5 张卡片、2,230 字符、558 token；目标卡 `R1-T01-target` 由 BM25 词法路径送达，重排来源为 `m3`。C1 的 AGENTS.md 已写入项目根并由 OpenCode 自动加载。
+
+失败运行保留不覆盖：`phase2-trials/c1c2-500` 与 `c1c2-500b` 因数据目录不在 `SIMPLERCP_IMPORT_ROOTS` 失败；`c1c2-500c` 因卡片导入上限 100 失败。对应 `failure.json` 与 `raw/` 保留在各自目录。修复为实验入口允许数据 worktree 作为导入根、把导入上限提高到 1,000 后，`c1c2-500d` 成功。
+
+### NT 导出与检索库
+
+已生成到 `exports/`：
+
+| 组 | 文件 | 卡片数 | 说明 |
+| --- | --- | ---: | --- |
+| C1-NT@40 | `AGENTS-R1-40-NT.md` / `AGENTS-R2-40-NT.md` | 35/项目 | 原有 40 张去掉 5 张目标卡 |
+| C1-NT@500 | `AGENTS-R1-500-NT.md` / `AGENTS-R2-500-NT.md` | 495/项目 | 500 张去掉 5 张目标卡 |
+| C2-NT@40 | `library-40-no-targets.json` | 70 | 40 规模检索库去掉 10 张目标卡 |
+| C2-NT@500 | `library-500-no-targets.json` | 990 | 500 规模检索库去掉 10 张目标卡 |
+
+删除的卡片 ID：`R1-T01-target`、`R1-T02-target`、`R1-T03-target`、`R1-T04-target`、`R1-T05-target`、`R2-T01-target`、`R2-T02-target`、`R2-T03-target`、`R2-T04-target`、`R2-T05-target`。机器可读记录在 `exports/nt-report.json`。
+
+### 费用与时间预估
+
+以单任务试跑为锚点：C1@500 约 1.02 元/5.3 分钟，C2@500 约 0.82 元/3.4 分钟。阶段 3 矩阵（C1 3 规模、C2 3 规模、C1s 2 规模、C1-NT@40、C1-NT@500、C2-NT@500）共 726 次运行；若 C1s 不可行则为 594 次。按 C1@40/200 和 NT 条件略低于 500 规模估算，总费用约 **450–550 元**，串行墙钟约 **40–45 小时**；配置 `concurrency: 2` 时约 **20–25 小时**。这是单任务单规模的粗略外推，正式运行前应以试跑更新。
+
 ## 阶段 3 矩阵（更新）
 
 在原有 7 组之外增加 **C1-NT@500** 与 **C2-NT@500**：各项目从 500 张卡片中删除 5 张目标卡片后，分别导出全量 AGENTS.md 和做 BM25 + 重排检索注入；在 16 个陷阱任务上各跑 3 次。若新卡片无泄露，联合成功应接近 C0 的 2/16；明显更高则说明仍有泄露。C2-NT 用于区分检索路径带来的泄露。
@@ -251,7 +307,7 @@
 | C1 全量 AGENTS.md | 运行 | 运行 | 运行 |
 | C2 检索注入 | 运行 | 运行 | 运行 |
 | C1s 按路径规则文件 | 运行 | — | 运行 |
-| C1-NT 去目标卡全量 | — | — | 运行 |
+| C1-NT 去目标卡全量 | 运行 | — | 运行 |
 | C2-NT 去目标卡检索 | — | — | 运行 |
 
 ## 原始记录
@@ -267,4 +323,4 @@
 
 ## 下一步
 
-阶段 2 将检查 OpenCode 1.18.31 读取 AGENTS.md 的规则，判断 C1s 是否可行，并做 C1@500、C2@500、C1s@40 的试跑；阶段 3 按 22 任务 × 3 次重复运行矩阵，并加入 C1-NT@500 与 C2-NT@500。等待确认。
+阶段 2 已完成 OpenCode 读取规则验证和 C1@500/C2@500 试跑；C1s 在 1.18.31 上不可行，等待确认替代方案。阶段 3 按 22 任务 × 3 次重复运行矩阵，并加入 C1-NT@40、C1-NT@500、C2-NT@500。
