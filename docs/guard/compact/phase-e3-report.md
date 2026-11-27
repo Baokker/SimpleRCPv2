@@ -79,17 +79,46 @@ The source paths are relative to `experiments/guard/results-compact/`. The archi
 | VI-D, “No malicious request” and “Without the ceiling” | 0 and 1; 5 and 6 | 0 and 1 without the full setting. 5 and 6 with it. | `X3/x3-approval-burden-compact-v5/summary.json`, `groups[].maliciousAutomaticReleaseAfterOracle` |
 | VI-D, “On the judgment set” | 86 × 3, 6 high-risk, precision 18/19 (0.947, CI [0.754, 0.991]) and recall 18/18 (1.000, CI [0.824, 1.000]). The single false positive is `pnpm install` at confidence 0.62, below the 0.85 threshold, so its action stayed `ask` | MiniMax precision 17/17, recall 17/18. DeepSeek precision 18/20, recall 18/18. Both used 86 × 3 judgments. | `X4/x4-minimax-compact-v5/summary.json`. `WILSON_95.json`, `x4` `X4/x4-deepseek-compact-v5/summary.json`, corresponding fields. |
 | VI-D, “None of the 252 approvals” | 0/24 (CI [0.0%, 13.8%]) | Both models released 0/24 (CI [0.0%, 13.8%]) | `X4/x4-minimax-compact-v5/summary.json`, `ineligibleReleases`, `ineligibleApprovals` `X4/x4-deepseek-compact-v5/summary.json`, corresponding fields. |
-| VI-D, “The median latency” | Terminal 0.853/1.579 ms, agent 0.794/1.082 ms, decision 0.071/0.202 ms terminal and 0.070/0.218 ms agent | Terminal 9.048/34.269 ms, agent 13.168/55.547 ms, decision 0.156/0.404 ms terminal and 0.157/0.391 ms agent, median/p95 | `X5/x5-performance-compact-v5/summary.json`, `services.incremental`, `services.agentIncremental`, `decide` |
+| VI-D, “The median latency” | Terminal 0.853/1.579 ms, agent 0.794/1.082 ms, decision 0.071/0.202 ms terminal and 0.070/0.218 ms agent | Terminal 0.629/1.214 ms, agent 0.569/0.810 ms, decision 0.075/0.221 ms terminal and 0.073/0.210 ms agent, median/p95 | `X5/x5-performance-compact-v5/summary.json`, `services.incremental`, `services.agentIncremental`, `decide` |
 | VI-D, “Model calls took seconds” | MiniMax 2.611 s median and 6.715 s p95 | MiniMax 2.279 s median and 5.136 s p95. DeepSeek 2.230 s median and 4.115 s p95. | `X4/x4-minimax-compact-v5/summary.json`, `latencyMs` `X4/x4-deepseek-compact-v5/summary.json`, corresponding fields. |
-| VI-D, “Snapshots took about” | Medians 29.2, 279.3, and 1,298.0 ms; p95 39.9, 346.2, and 1,333.8 ms | Medians 87.0, 439.8, and 2,532.0 ms. P95 110.8, 622.4, and 2,960.7 ms. | `X5/x5-performance-compact-v5/summary.json`, `snapshots` |
+| VI-D, “Snapshots took about” | Medians 29.2, 279.3, and 1,298.0 ms; p95 39.9, 346.2, and 1,333.8 ms | Medians 27.0, 282.2, and 1,290.0 ms. P95 29.9, 291.1, and 1,301.3 ms. | `X5/x5-performance-compact-v5/summary.json`, `snapshots` |
 | VII-A, “156 of the 360 non-owner attempts” | 43.3% and 48.1% | 43.3% and 48.1% (unchanged) | `X2a/x2a-compact-v5/table-v.json` |
 | VII-A, “a wrong approval is reused” | 30-minute default configuration | 30-minute default configuration | `apps/server/src/guard/approvalMemory.ts` |
-| Conclusion, “On 717 static records” | 717 static, 173/185 (93.5%), 5/286 (1.7%), 0 irreversible in 360 non-owner attempts, 0.853 ms terminal median | 717 static records, 173/185 intercepted (93.5%), 5/286 false blocks (1.7%), 9.048 ms terminal median. 0 irreversible in 360 non-owner attempts (X2a v5). | `eval_stats.json`, `baselines.F`. `X5/x5-performance-compact-v5/summary.json`. v4 execution evidence: `X2a/x2a-compact-v4/table-v.json`. |
+| Conclusion, “On 717 static records” | 717 static, 173/185 (93.5%), 5/286 (1.7%), 0 irreversible in 360 non-owner attempts, 0.853 ms terminal median | 717 static records, 173/185 intercepted (93.5%), 5/286 false blocks (1.7%), 0.629 ms terminal median. 0 irreversible in 360 non-owner attempts (X2a v5). | `eval_stats.json`, `baselines.F`. `X5/x5-performance-compact-v5/summary.json`. v4 execution evidence: `X2a/x2a-compact-v4/table-v.json`. |
 | X9 interleaved restoration | 7/7 (CI [64.6%, 100%]), 1 restoration, 6 handoffs | 7/7 correct (CI [64.6%, 100%]), 1 restoration, 6 handoffs | `X9/x9-restore-compact-v5/summary.json`, `correct`, `restored`, `handedToPerson` |
 
-The X5 process ran alongside other Phase E3 jobs under Node.js 24.7.0. The comparison reports the measured latencies under those conditions. The benchmark recorded a PTY `EIO` and produced all 14,015 rows. The persisted member records contained 20 maintainers in each condition.
+The X5 numbers above come from the first v5 run of the rerun described below. That run used Node.js 22.19.0 and produced all 14,015 rows. The earlier X5 run under Node.js 24.7.0 ran alongside other Phase E3 jobs and is superseded. The persisted member records contained 20 maintainers in each condition.
 
 The X3 replay added three approvals in each ceiling-on setting. The differing rows were archived CSV reads that matched `hard.outside` in the v5 run. X3 invokes the policy decision function on replayed requests.
+
+## X5 rerun
+
+X5 was rerun alone on Node.js 22.19.0 (`env.json`, `node`). Four runs alternated v5, v4, v5, v4 with at least 75 s between them; each run started and finished in about 21 s and wrote all 14,015 rows. Run 1 is the v5 result reported above and stays in `X5/x5-performance-compact-v5/`. All four runs are archived in `X5/x5-ab-v4-v5/run-<n>-<ref>/`, each with its `summary.json` and `env.json`.
+
+The host was not idle. The 8-core machine ran at a 1-minute load of 4.4 to 8.3; the process snapshot taken at each run start listed `WindowServer` and the desktop client carrying this session as the largest consumers, near 50% and 70% of one core. `uptime` was recorded immediately before and after every run:
+
+| Run | Tested ref | `uptime` before (load 1/5/15) | `uptime` after (load 1/5/15) |
+|---|---|---|---|
+| 1 | v5 | 15:56, 7.18 / 6.33 / 6.61 | 15:57, 8.26 / 6.64 / 6.71 |
+| 2 | v4 | 15:58, 4.81 / 5.92 / 6.43 | 15:58, 4.36 / 5.74 / 6.35 |
+| 3 | v5 | 16:00, 4.98 / 5.78 / 6.33 | 16:00, 5.27 / 5.80 / 6.32 |
+| 4 | v4 | 16:01, 4.94 / 5.55 / 6.17 | 16:02, 5.55 / 5.67 / 6.20 |
+
+Median and p95 for each run, the mean of the two runs per ref, and the v5-to-v4 ratio:
+
+| Metric (median / p95) | Run 1, v5 | Run 2, v4 | Run 3, v5 | Run 4, v4 | v5 mean | v4 mean | v5 / v4 |
+|---|---|---|---|---|---|---|---|
+| Terminal increment (ms) | 0.629 / 1.214 | 0.635 / 1.030 | 0.604 / 1.008 | 0.597 / 1.032 | 0.617 / 1.111 | 0.616 / 1.031 | 1.00 / 1.08 |
+| Agent increment (ms) | 0.569 / 0.810 | 0.549 / 0.764 | 0.567 / 0.896 | 0.559 / 0.774 | 0.568 / 0.853 | 0.554 / 0.769 | 1.03 / 1.11 |
+| Decision, terminal (ms) | 0.075 / 0.221 | 0.072 / 0.201 | 0.071 / 0.214 | 0.072 / 0.205 | 0.073 / 0.217 | 0.072 / 0.203 | 1.02 / 1.07 |
+| Decision, agent (ms) | 0.073 / 0.210 | 0.071 / 0.204 | 0.070 / 0.196 | 0.071 / 0.198 | 0.072 / 0.203 | 0.071 / 0.201 | 1.02 / 1.01 |
+| Snapshot 1 MB (ms) | 27.0 / 29.8 | 25.7 / 27.5 | 26.3 / 27.6 | 26.8 / 28.4 | 26.7 / 28.7 | 26.3 / 28.0 | 1.01 / 1.03 |
+| Snapshot 10 MB (ms) | 282.2 / 291.1 | 248.3 / 260.5 | 250.6 / 270.7 | 242.6 / 247.1 | 266.4 / 280.9 | 245.4 / 253.8 | 1.09 / 1.11 |
+| Snapshot 100 MB (ms) | 1290.0 / 1301.3 | 1230.3 / 1286.5 | 1239.7 / 1264.4 | 1221.4 / 1281.7 | 1264.9 / 1282.9 | 1225.9 / 1284.1 | 1.03 / 1.00 |
+
+Every ratio stays between 0.999 and 1.11, so the 20% threshold is not reached on any metric. Six of the fourteen columns place both v5 runs above both v4 runs, and the largest of those is 11%. The widest gaps are the 10 MB snapshot median (+8.6%), the agent-increment p95 (+10.9%) and the terminal-increment p95 (+7.8%). The terminal-increment median, which is the path the v5 attribution change touches, is unchanged: 0.617 against 0.616 ms.
+
+The superseded v5 run reported a 9.048 ms terminal median and 2,532 ms for the 100 MB snapshot; the rerun measures 0.629 ms and 1,290 ms on the same commit (`1c9ef6bb`). That gap is load, not code. The v5 delta against v4 adds workspace-write attribution: `workspaceWatcher.ts` forwards changes to `GuardService`, `service.ts` keeps an activity map and resolves observed writes against it, and `realtime.ts`, `sharedTerminal.ts` and `agentRunManager.ts` register and release terminal and agent activities. X5 exercises that path through the real WebSocket terminal and the real `GuardService.submit` call, and no metric shows a reproducible cost above run-to-run noise. The report therefore treats v5 as carrying no measurable overhead over v4.
 
 ## D4 Member binding
 
