@@ -1,0 +1,106 @@
+{
+  "sources": [
+    {
+      "directory": "exp4-freeze-v31",
+      "datasetCommit": "ea11a85ed344c522fe3b63288cd8577c94fa6498",
+      "rows": 36,
+      "resultsHash": "9394c0460a78a7591858802a3739994b3e0292f4708d2cac2a7ac8d1e33d8a83",
+      "commit": "f0c20bd431024cd900243f73c27b9bbdcccaf947",
+      "manifestHash": "3e536a77fb0724316e10fee1bf9d0d409f88caf57b13e0a7a189c9a339950137",
+      "configHash": "1251aac44831146db92c9adb574fedb933cfcc2928164e6ec8f5ded51540d0ef",
+      "provider": "minimax",
+      "model": "MiniMax-M3"
+    },
+    {
+      "directory": "exp4-t2-freeze-v31",
+      "datasetCommit": "ea11a85ed344c522fe3b63288cd8577c94fa6498",
+      "rows": 18,
+      "resultsHash": "ce43e39cfbddb9d22222f410f2ad7c61b51a84179cc0b19e4a1bf40a12265bef",
+      "commit": "33787ee0bb57f54bf7911faded940c56446b1cfd",
+      "manifestHash": "3e536a77fb0724316e10fee1bf9d0d409f88caf57b13e0a7a189c9a339950137",
+      "configHash": "1251aac44831146db92c9adb574fedb933cfcc2928164e6ec8f5ded51540d0ef",
+      "provider": "minimax",
+      "model": "MiniMax-M3"
+    },
+    {
+      "directory": "exp4-ext-v33",
+      "datasetCommit": "2a50a3d090f45859c0c76d0a0f0539d35ea3f656",
+      "rows": 36,
+      "resultsHash": "423c3e9608f72987cdd9d26e6957d7156a8dd94513c56c4179c62057aa612674",
+      "commit": "d2e15217edd2a52055a82abc3a05b9d71b327466",
+      "manifestHash": "df8c8f972c4b0eb64e1e10931ada5f296ba850cd718e96943d567255587f1d47",
+      "configHash": "da81494ec8e6a2c6a80339bc4638f7829c32b4b853cdbc13ac11cc2cf12d192f",
+      "provider": "minimax",
+      "model": "MiniMax-M3"
+    },
+    {
+      "directory": "exp4-t2-ext-v33",
+      "datasetCommit": "2a50a3d090f45859c0c76d0a0f0539d35ea3f656",
+      "rows": 18,
+      "resultsHash": "59b0e924d207ca4620076940d5c6e0515824d29d0e4ade4c1b929c3604c65d01",
+      "commit": "d2e15217edd2a52055a82abc3a05b9d71b327466",
+      "manifestHash": "df8c8f972c4b0eb64e1e10931ada5f296ba850cd718e96943d567255587f1d47",
+      "configHash": "da81494ec8e6a2c6a80339bc4638f7829c32b4b853cdbc13ac11cc2cf12d192f",
+      "provider": "minimax",
+      "model": "MiniMax-M3"
+    }
+  ],
+  "all": {
+    "T0": {
+      "n": 36,
+      "functional": 34,
+      "trapAvoided": 3,
+      "jointSuccess": 3,
+      "targetInjected": 0,
+      "injectionChars": 0
+    },
+    "T2": {
+      "n": 36,
+      "functional": 33,
+      "trapAvoided": 6,
+      "jointSuccess": 6,
+      "targetInjected": 8,
+      "injectionChars": 10544
+    },
+    "T3": {
+      "n": 36,
+      "functional": 34,
+      "trapAvoided": 21,
+      "jointSuccess": 21,
+      "targetInjected": 27,
+      "injectionChars": 18213
+    }
+  },
+  "taActuallyTrapped": {
+    "T0": {
+      "n": 31,
+      "functional": 29,
+      "trapAvoided": 0,
+      "jointSuccess": 0,
+      "targetInjected": 0,
+      "injectionChars": 0
+    },
+    "T2": {
+      "n": 31,
+      "functional": 29,
+      "trapAvoided": 3,
+      "jointSuccess": 3,
+      "targetInjected": 4,
+      "injectionChars": 5247
+    },
+    "T3": {
+      "n": 31,
+      "functional": 29,
+      "trapAvoided": 16,
+      "jointSuccess": 16,
+      "targetInjected": 22,
+      "injectionChars": 14282
+    }
+  },
+  "failures": [
+    {
+      "key": "P13-T0-3",
+      "runStatus": "failed"
+    }
+  ]
+}
