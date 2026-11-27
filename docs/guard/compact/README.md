@@ -35,4 +35,3 @@ Node.js 22.19.0 was used for X2a, X2b, D5b and X5. The policy-only runs listed i
 - External attack set (AgentDojo or InjecAgent) not evaluated.
 - Human annotation of the static set not done. The labels come from the independent script `experiments/guard/lib/compact-labels.ts`.
 - No user study.
-- The DeepSeek school endpoint has no verified public price, so its cost is omitted.
