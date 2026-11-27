@@ -1,0 +1,20 @@
+{
+  "experiment": "k3",
+  "commit": "08209eed0ea60da9a337b0774cb48ec1a1ac829a",
+  "configHash": "d646e4fabe5cf160196a0ea8b581249377b5c3260480699f3be7c2048107ff13",
+  "manifestHash": "6ce9dd9434721117c67e2439a52d002c6942f0ed4112b80adcbb4a5c04d22bd1",
+  "library": "trapbench/cards/library-500.json",
+  "provider": "minimax",
+  "model": "MiniMax-M3",
+  "config": {
+    "origin": "http://127.0.0.1:4203",
+    "provider": "minimax",
+    "model": "MiniMax-M3",
+    "concurrency": 1,
+    "timeoutMs": 600000,
+    "delayMs": 0,
+    "speed": 1,
+    "repetitions": 1,
+    "seed": 20261127
+  }
+}

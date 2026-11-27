@@ -5,8 +5,8 @@ import {benchRoot, platformRoot, readJson, writeJson} from "./common.js";
 
 const outDirectory = path.resolve(platformRoot, "experiments/knowledge/runs/r4-scale-v31/exports");
 await fs.mkdir(outDirectory, {recursive: true});
-const library40 = await readJson<Array<{repository: string; card: any}>>(path.join(benchRoot, "trapbench/cards/library.json"));
-const library500 = await readJson<Array<{repository: string; card: any}>>(path.join(benchRoot, "trapbench/cards/library-500.json"));
+const library40 = JSON.parse(await fs.readFile(path.join(benchRoot, "trapbench/cards/library.json"), "utf8")) as Array<{repository: string; card: any}>;
+const library500 = JSON.parse(await fs.readFile(path.join(benchRoot, "trapbench/cards/library-500.json"), "utf8")) as Array<{repository: string; card: any}>;
 const tasks = [];
 for (const entry of await fs.readdir(path.join(benchRoot, "trapbench/tasks"), {withFileTypes: true})) {
   if (!entry.isDirectory()) continue;
@@ -15,7 +15,8 @@ for (const entry of await fs.readdir(path.join(benchRoot, "trapbench/tasks"), {w
 const targetIds = [...new Set(tasks.map(task => task.targetCardId).filter(Boolean))].sort();
 const active40 = library40.filter(item => item.card.status === "reviewed" && !item.card.id.endsWith("-contradict"));
 const report: any = {generatedAt: new Date().toISOString(), deletedCardIds: targetIds, groups: {}};
-for (const [scale, source] of [["40", active40], ["500", library500]]) {
+const groups: Array<[string, Array<{repository: string; card: any}>]> = [["40", active40], ["500", library500]];
+for (const [scale, source] of groups) {
   const kept = source.filter(item => !targetIds.includes(item.card.id));
   const outFile = path.join(outDirectory, `library-${scale}-no-targets.json`);
   await writeJson(outFile, kept);

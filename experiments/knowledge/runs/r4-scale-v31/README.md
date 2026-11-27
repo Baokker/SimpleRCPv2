@@ -1,6 +1,6 @@
 # RQ3 补充实验 · 阶段 1–2（知识库、泄露修正、OpenCode 试跑）
 
-状态：阶段 2 完成；C1s 在 OpenCode 1.18.31 上不可行，等待确认替代方案后进入阶段 3。旧模板方案已作废：`knowledge-bench-r4` 分支 `r4-scaled-kb`（提交 `451fa73`）的 `library-200.json` / `library-500.json` 由两种固定模板生成，920 张卡片只差编号，不再用于任何实验；该 worktree 保留作记录，不删除、不引用。
+状态：阶段 2 完成；原生 C1s 在 OpenCode 1.18.31 上不可行，已按确认改为 C1s-prompt 并完成试跑，准备进入阶段 3。旧模板方案已作废：`knowledge-bench-r4` 分支 `r4-scaled-kb`（提交 `451fa73`）的 `library-200.json` / `library-500.json` 由两种固定模板生成，920 张卡片只差编号，不再用于任何实验；该 worktree 保留作记录，不删除、不引用。
 
 ## 分支、提交与 manifest
 
@@ -257,7 +257,7 @@
 
 ### C1s 结论
 
-按原计划把规则写入各目录 AGENTS.md、依赖 OpenCode 自动按路径读取的 C1s 在 1.18.31 上**不可行**，因此没有执行 C1s@40 试跑。可选替代方案（需要确认，不自行决定）：
+按原计划把规则写入各目录 AGENTS.md、依赖 OpenCode 自动按路径读取的原生 C1s 在 1.18.31 上**不可行**。已确认采用 **C1s-prompt**：只用 C2 同源的 `activeFiles`，把匹配卡片写入项目根 AGENTS.md。其余备选方案保留供参考：
 
 1. **C1s-prompt（推荐）**：任务开始时按卡片的 `appliesTo`/锚点路径与任务提示中出现的文件匹配，只把匹配规则拼接到根 AGENTS.md 或任务前缀；保留路径范围，且利用 OpenCode 原生根文件加载。属于实验入口改动，不改产品。
 2. **C1s-cwd**：把会话工作目录设到任务主要子目录，OpenCode 会加载该目录及祖先的 AGENTS.md；但任务跨多个目录，工作区根会改变，不适合当前任务。
@@ -280,6 +280,21 @@ C1@500 R1 的 AGENTS.md 为 136,205 字符、52,678 真实 token；C1 首请求�
 C2 注入 5 张卡片、2,230 字符、558 token；目标卡 `R1-T01-target` 由 BM25 词法路径送达，重排来源为 `m3`。C1 的 AGENTS.md 已写入项目根并由 OpenCode 自动加载。
 
 失败运行保留不覆盖：`phase2-trials/c1c2-500` 与 `c1c2-500b` 因数据目录不在 `SIMPLERCP_IMPORT_ROOTS` 失败；`c1c2-500c` 因卡片导入上限 100 失败。对应 `failure.json` 与 `raw/` 保留在各自目录。修复为实验入口允许数据 worktree 作为导入根、把导入上限提高到 1,000 后，`c1c2-500d` 成功。
+
+### C1s-prompt 试跑与选择结果
+
+按确认的规则实现 C1s：路径信号只用 C2 同一来源的 `activeFiles`（`knowledgeActiveFiles`：explicit-context、成员当前文件、任务提示中出现的现有工作区路径；k3 任务没有前两者，因此实际是提示中出现的现有路径）。项目级卡片全部写入；文件/目录级卡片在 `appliesTo` 或锚点路径与 activeFile 相同或为祖先目录时写入；不排序、不重排、不设数量上限；写入项目根 AGENTS.md。
+
+任务 `R1-T01`，各 1 次：
+
+| 条件 | 选中卡片 | 目标卡在内 | 字符数 | 估算 token（chars/4） | functional | trapAvoided | 费用 CNY | Agent 墙钟 |
+| --- | ---: | --- | ---: | ---: | --- | --- | ---: | ---: |
+| C1s@40 | 40 | true | 8,337 | 2,085 | true | true | 0.7401 | 150s |
+| C1s@500 | 46 | true | 9,818 | 2,455 | true | true | 0.8283 | 131s |
+
+`R1-T01` 的 activeFiles 为空（提示中的 `src/services/reservation-batch.ts` 是待新增文件），所以 C1s@500 只写入 40 张原有项目级卡片 + 6 张新项目级卡片 = 46 张；C1s@40 的 40 张原有卡片全部没有 `appliesTo`，按规则都是项目级，因此 **C1s@40 与 C1@40 在内容上等价**。这不是实现错误，而是原有 40 张卡片的 `appliesTo` 属性决定的；C1s@40 因此主要作为通道对照。
+
+全任务选择扫描（不运行 Agent）：R1 的 11 个任务 activeFiles 均为 0，C1s@500 选 46 张；R2 任务 activeFiles 为 1–2 个，C1s@500 选 44–67 张，目标卡均在内。C1s@40 对所有任务都是 40 张（全部项目级）。R2 的路径匹配确实收窄/扩展了写入集合，说明规则生效。
 
 ### NT 导出与检索库
 
