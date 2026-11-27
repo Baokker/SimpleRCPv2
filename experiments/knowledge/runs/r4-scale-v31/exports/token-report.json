@@ -1,48 +1,48 @@
 {
   "model": "MiniMax-M3",
   "baseUrl": "https://api.minimaxi.com/v1",
-  "generatedAt": "2026-11-27T04:34:45.316Z",
+  "generatedAt": "2026-11-27T06:29:08.175Z",
   "libraries": {
     "200": {
       "file": "trapbench/cards/library-200.json",
       "repositories": {
         "R1": {
           "cards": 200,
-          "chars": 52771,
-          "bytes": 106907,
+          "chars": 53107,
+          "bytes": 107305,
           "lines": 1614,
           "file": "experiments/knowledge/runs/r4-scale-v31/exports/AGENTS-R1-200.md",
           "tokens": {
             "ok": true,
-            "durationMs": 3016,
+            "durationMs": 3648,
             "usage": {
-              "promptTokens": 20904,
-              "completionTokens": 219,
-              "cacheReadTokens": 20864,
-              "totalTokens": 21123
+              "promptTokens": 20955,
+              "completionTokens": 248,
+              "cacheReadTokens": 128,
+              "totalTokens": 21203
             },
-            "text": "已了解这套团队过程性知识。后续涉及代码修改时，我会遵循以下原则：\n\n- 先识别需求对应的模块、决策、约束与风险，再实施修改。\n- 保持现有数据结构、错误处理入口、返回契约和模块边界。\n- HTTP 路由保持薄层：负责输入校验、参数转换和调用服务，不重复业务规则。\n- 服务层和领域层负责业务状态、权限相关业务规则、并发控制及错误裁决。\n- 存储层负责数据操作，不混入权限策略；读取结果按约定返回隔离副"
+            "text": "已收到并理解这份团队过程性知识。后续处理相关代码时，我会重点遵循以下原则：\n\n- 以列出的**决策、约束和上下文**为当前契约；**风险与负向经验**用于识别边界和潜在缺陷，不直接当作现行实现要求。\n- 严格遵守文件适用范围，避免把局部规则错误扩展到整个项目。\n- 保持既有数据结构、错误处理方式、返回结构和记录顺序。\n- 修改前检查相关模块的跨层调用、依赖注入、返回值复制、并发控制和幂等语义。\n-"
           },
-          "contentTokens": 20727
+          "contentTokens": 20778
         },
         "R2": {
           "cards": 200,
-          "chars": 58451,
-          "bytes": 113241,
+          "chars": 58054,
+          "bytes": 112768,
           "lines": 1614,
           "file": "experiments/knowledge/runs/r4-scale-v31/exports/AGENTS-R2-200.md",
           "tokens": {
             "ok": true,
-            "durationMs": 3343,
+            "durationMs": 5715,
             "usage": {
-              "promptTokens": 22360,
-              "completionTokens": 232,
-              "cacheReadTokens": 512,
-              "totalTokens": 22592
+              "promptTokens": 22236,
+              "completionTokens": 355,
+              "cacheReadTokens": 128,
+              "totalTokens": 22591
             },
-            "text": "已了解。我会依据这份团队过程性知识，在后续任务中重点遵守以下原则：\n\n- 严格遵守各模块的既有契约、文件格式、字段命名与版本约定。\n- 写操作先完成权限、身份、成员关系及路径边界校验。\n- 文件读写使用原子写入、私有权限和受根目录约束的规范化路径。\n- 持久化操作保持顺序、串行化，并正确传播错误。\n- 外部输入实施运行时校验，不以 TypeScript 类型断言代替校验。\n- 读取接口避免泄露内部"
+            "text": "已收到这份《团队过程性知识》。后续处理相关代码时，我会遵循其中的决策、约束、风险与负向经验，并优先参考以下核心原则：\n\n- **存储契约由工厂推导**：存储与桥接类型优先使用 `ReturnType` / `Awaited<ReturnType<...>>`，避免接口漂移。\n- **边界先校验、后持久化**：路径、项目归属、身份、请求体、ZIP 条目及持久化记录均需运行时校验。\n- **身份与权限"
           },
-          "contentTokens": 22183
+          "contentTokens": 22059
         }
       }
     },
@@ -51,54 +51,54 @@
       "repositories": {
         "R1": {
           "cards": 500,
-          "chars": 136118,
-          "bytes": 269734,
+          "chars": 136205,
+          "bytes": 270015,
           "lines": 4014,
           "file": "experiments/knowledge/runs/r4-scale-v31/exports/AGENTS-R1-500.md",
           "tokens": {
             "ok": true,
-            "durationMs": 3173,
+            "durationMs": 4146,
             "usage": {
-              "promptTokens": 52795,
-              "completionTokens": 202,
-              "cacheReadTokens": 52794,
-              "totalTokens": 52997
+              "promptTokens": 52678,
+              "completionTokens": 155,
+              "cacheReadTokens": 170,
+              "totalTokens": 52833
             },
-            "text": "已收到并理解这些团队过程性知识。后续涉及订单、成员、库存、结算、审计、通知、报表、支付及 HTTP 路由等模块时，我会遵循这些决策、约束和风险边界，尤其注意：\n\n- 金额统一使用整数分，时间按模块约定使用注入时钟。\n- HTTP 路由保持薄层，输入校验与业务规则分别下沉到边界和服务层。\n- 存储依赖通过构造函数注入，并保持只读。\n- 写操作关注并发版本、幂等重放和失败原子性。\n- 查询结果、嵌套 "
+            "text": "已收到这些团队过程性知识。我会将其作为后续开发与代码审查的上下文，重点遵守以下原则：\n\n- 金额统一使用整数分与 `Money`\n- 时间统一使用注入的秒级时钟\n- HTTP 层负责输入校验，服务与领域层负责业务规则\n- 存储读取返回隔离副本，写入尽量携带版本校验\n- 审计、事件、通知与结算遵循既定的幂等、顺序和状态迁移规则\n- 集合、分页与导出的字段及结构保持稳定\n- 不擅自修改公共 API、持"
           },
-          "contentTokens": 52618
+          "contentTokens": 52501
         },
         "R2": {
           "cards": 500,
-          "chars": 150453,
-          "bytes": 284989,
+          "chars": 148575,
+          "bytes": 282545,
           "lines": 4014,
           "file": "experiments/knowledge/runs/r4-scale-v31/exports/AGENTS-R2-500.md",
           "tokens": {
             "ok": true,
-            "durationMs": 4089,
+            "durationMs": 4292,
             "usage": {
-              "promptTokens": 56377,
-              "completionTokens": 123,
-              "cacheReadTokens": 172,
-              "totalTokens": 56500
+              "promptTokens": 55793,
+              "completionTokens": 214,
+              "cacheReadTokens": 128,
+              "totalTokens": 56007
             },
-            "text": "已了解并记录这份团队过程性知识。后续我将遵循其中的：\n\n- **决策**：作为实现与设计取舍的优先依据。\n- **约束**：作为必须满足的安全、一致性和兼容性要求。\n- **风险**：作为修改时重点检查的潜在问题。\n- **上下文与教程**：作为实现、测试和迁移时的操作参考。\n- **负向经验**：作为避免重复错误和错误抽象的检查清单。\n\n涉及相关模块时，我会同时核对**错误传播、返回值复制、记录"
+            "text": "We need respond? User provided knowledge only, no explicit task. We should acknowledge perhaps ask what help needed. Since Chinese. Concise. Maybe mention can use it as context and request concrete ta"
           },
-          "contentTokens": 56200
+          "contentTokens": 55616
         }
       }
     }
   },
   "baseline": {
     "ok": true,
-    "durationMs": 1477,
+    "durationMs": 3136,
     "usage": {
       "promptTokens": 177,
       "completionTokens": 9,
-      "cacheReadTokens": 128,
+      "cacheReadTokens": 170,
       "totalTokens": 186
     },
-    "text": "Great! How can I help you?"
+    "text": "OK! How can I help you?"
   }
 }

@@ -106,13 +106,13 @@ DeliveryFailure 必须给出下次尝试时刻和是否耗尽状态。
 
 适用范围：`src/services/delivery-service.ts`
 
-### 订单事件标识保持稳定
+### 派发记录限定当前进程
 
-eventForOrder 使用订单号生成固定事件标识。
+NotificationDispatcher 的发送记录仅在当前实例内保存。
 
-> eventForOrder 应以 orderId 构造 eventId，并同时保留 recipient 与 template，便于事件来源可追踪；订单号缺失或格式异常时应由边界检查拦截。该决策适用于订单通知事件构造及后续数据出口调整。
+> NotificationDispatcher.delivered 使用进程内 Map 保存本实例已处理的事件，dispatch 遇到已存在的 eventId 时返回 delivered 为 false。这样可隔离不同运行实例的状态；该规则仅适用于当前实例的同步派发。
 
-适用范围：`src/workflow/notification-workflow.ts`
+适用范围：`src/notifications/dispatcher.ts`
 
 ### 派发缓存限定进程内
 
@@ -154,13 +154,13 @@ OrderService.summarize 每次依据订单当前状态重新计算金额。
 
 适用范围：`src/services/order-service.ts`
 
-### 身份显示名须先净化
+### 已退款订单禁止再次取消
 
-resolveIdentity 展示名称需经 sanitizeDisplayName 处理。
+cancelOrder 遇到 refunded 状态时抛出 DomainError，保留订单状态机和错误码语义。
 
-> resolveIdentity 输出展示信息前，应让 displayName 通过 sanitizeDisplayName 处理，避免控制字符或异常文本进入界面。这样可保持身份结果可读，适用范围限于身份解析函数的展示字段。
+> cancelOrder 处理 order.status 为 refunded 的订单时，应抛出携带 ERROR_CODES.ORDER_CANCELLED 的 DomainError，不继续生成 cancelled 状态或追加 internalNotes。这样可阻止退款后的订单重新进入取消流程，并让调用方按统一错误机制处理。规则适用于所有调用 cancelOrder 的订单取消入口。
 
-适用范围：`src/security/identity.ts`
+适用范围：`src/workflow/order-workflow.ts`
 
 ### append 遇到重复事件应拒绝
 
@@ -202,13 +202,13 @@ toReportRow 的金额输出统一采用整数分单位。
 
 适用范围：`src/reports/order-report.ts`
 
-### 账目时间由调用方注入
+### 结算批次读取采用防御性复制
 
-LedgerEntry 固定保存调用方提供的毫秒时间戳，不在领域层读取系统时钟。
+get 返回副本，避免调用方直接修改 SettlementStore 内部批次。
 
-> LedgerEntry 将 createdAt 定义为 number，创建账目时由调用方传入具体时间戳，entry 不调用 Date.now 或其他时钟 API。原因是账务入账时间会影响排序、结算和对账，领域对象若隐式读取时钟会降低可重放性，也不利于测试构造固定场景。适用于所有新建 LedgerEntry 的服务、存储写入和审计流程；调用方必须明确时间来源，单位统一为毫秒。
+> SettlementStore.get 在 batches 中未命中时返回 undefined，命中时通过 copyBatch 返回 SettlementBatch 的副本，而不是暴露 this.batches 中保存的对象。这样可防止调用方直接改写存储层内部状态，避免后续读取看到未经存储层处理的变更。该规则适用于通过 get 读取批次的所有调用场景；写入操作仍须使用 SettlementStore.update。
 
-适用范围：`src/domain/ledger.ts`
+适用范围：`src/storage/settlement-store.ts`
 
 ### 主单位金额必须先校验
 
@@ -250,13 +250,13 @@ SettlementBatch 状态变更需配合版本校验，阻止并发覆盖。
 
 适用范围：`src/http/delivery-routes.ts`
 
-### 库存路径留在工作区
+### 取消权限由状态白名单决定
 
-库存路由只处理仓库内资源，不跨业务工作区。
+canCancel 仅放行草稿、已支付和部分退款订单。
 
-> registerInventoryRoutes 中的路径映射统一以 /inventory 为库存工作区入口，查询与变更使用 warehouseId 明确仓库边界，transfer 则通过 sourceId 和 destinationId 表达仓库间移动。路由层不得把 orderId 当作库存路径或工作区标识，也不得借用其他模块路径暴露库存能力；orderId 只作为 reserve 的业务关联字段传入 InventoryService。该决策适用于路由注册、参数映射和接口命名，可避免库存资源与订单资源边界混淆。
+> 订单取消入口统一调用 canCancel 判断 order.status，命中 draft、paid 或 partially-refunded 才返回 true。cancelOrder 与 reopenOrder 不应另建状态判断，否则同一订单可能从不同入口得到相反结果。该规则适用于所有触发取消操作的流程；新增状态前，必须先确认其业务含义，再同时调整状态白名单及相关测试。
 
-适用范围：`src/http/inventory-routes.ts`
+适用范围：`src/workflow/order-workflow.ts`
 
 ### 订单筛选参数统一校验
 
@@ -338,13 +338,13 @@ listReservations 复用 reservationList 的过滤与结果结构，不额外加�
 
 适用范围：`src/services/inventory-service.ts`
 
-### 事务采用隔离副本提交
+### 订单路由统一校验查询
 
-InventoryStore.transaction 先在隔离副本执行，冲突时不提交任何修改。
+订单读取路由先解析并校验查询参数，再调用服务层。
 
-> 调用 InventoryStore.transaction 时，operation 只能操作回调收到的 isolated InventoryStore；库存和预占先写入副本，结束后再检查 revision。revision 发生变化说明并发写入，抛出“Inventory transaction conflict”且不提交副本，避免重试造成重复扣减或预占。适用于单次库存事务；需要提交结果时使用返回值，并让业务层决定冲突后的重试或幂等策略。
+> registerOrderRoutes 中的三个 GET handler 都先以 objectInput(value) 将请求输入转换为查询对象，再交给 filters 校验，非法类型或状态会立即抛出 Error，不进入 OrderService。这样可让列表、导出和计数采用一致的输入边界，也避免服务层接收到结构不确定的数据。
 
-适用范围：`src/storage/inventory-store.ts`
+适用范围：`src/http/order-routes.ts`
 
 ### 结算列表按时间倒序
 
@@ -378,13 +378,13 @@ isDomainError 只认 DomainError 实例，不以错误码或文案猜测类型�
 
 适用范围：`src/domain/errors.ts`
 
-### 释放库存采用单项路径
+### 无分页参数时返回完整结果
 
-releaseStock 仅处理一个 StockItem 的指定预留量，批量操作须由服务层逐项调用。
+订单列表仅在提供分页参数时包装分页结果。
 
-> releaseStock 释放单个 StockItem 中指定 amount 的预留量，并返回新的库存对象；它不接收 Reservation 列表，也不负责跨仓库批量编排。服务层对批量释放请求按 SKU 或仓库分组后逐项调用 releaseStock；任一项超过 reserved 时，该次操作必须失败，不得跳过或转为 available。返回对象会增加 version，缓存层据此按新版本失效。适用于订单取消、批量释放及含多仓库存的结算流程。
+> registerOrderRoutes 将 service.list(filters(query)) 的结果保存为 matched；只有 query.offset 或 query.limit 存在时才调用 page 与 pageQuery。若两者均为 undefined，则直接返回 matched，使列表接口兼容无分页调用；分页元数据不会凭空加入未请求分页的响应。
 
-适用范围：`src/domain/inventory.ts`
+适用范围：`src/http/order-routes.ts`
 
 ### 消耗必须扣减现有预留
 
@@ -474,13 +474,13 @@ HTTP路由不处理版本冲突，写入竞争由DeliveryService统一裁决。
 
 适用范围：`src/http/delivery-routes.ts`
 
-### 时间来源下沉服务层
+### 数值配置读取约定
 
-路由不读取当前时间，DeliveryService统一决定ready、health及投递状态中的时间语义。
+settingNumber 校验数值类型并使用显式兜底值。
 
-> registerDeliveryRoutes未在handler中调用时间API，而是把ready、health、begin、succeed和reject直接委托给DeliveryService。由服务层统一使用可替换时钟，可让测试固定时间，并避免各HTTP入口产生时区、精度或重试窗口差异。适用于delivery的健康判断、状态流转和回执时间记录；路由层新增基于时间的参数时也不得自行读取系统时钟。
+> 团队决定通过 settingNumber(settings, key, fallback) 读取数值型配置。函数仅在 settings\[key] 的实际类型为 number 时采用该值，其他类型一律返回调用方给出的 fallback。这样可以阻止字符串形式的数值被静默接受或隐式转换，并让服务层、存储层及 HTTP 路由共享一致的读取行为。新增数值配置时应在调用处提供明确的 fallback，且不得依赖未通过类型检查的配置内容。
 
-适用范围：`src/http/delivery-routes.ts`
+适用范围：`src/config/settings.ts`
 
 ### 配送路由固定序列化契约
 
@@ -522,13 +522,13 @@ pageQuery 缺省返回前 20 条，并将 limit 限制在 1 到 100。
 
 适用范围：整个项目
 
-### 敏感词表按共享集合维护
+### count 以内部值为准
 
-SENSITIVE_KEYS 是脱敏判断共享词表，新增键需统一登记。
+AuditStore.count 直接读取 values.length，不经过副本化查询流程。
 
-> SENSITIVE_KEYS 统一收录 token、password、apikey、authorization、secret，并由 isSensitiveKey 供 redactSensitive、redactText 等脱敏路径复用，避免各调用点维护不同词表。敏感键命名发生变化时，只修改该集合并补充覆盖用例；不要在单条日志处理分支中另建判断规则，否则相同字段可能出现脱敏结果不一致。
+> AuditStore.count 采用 this.values.length 统计已保存的审计条目数量，不调用 all，也不创建 AuditEntry 副本。该决策让计数保持轻量，并直接反映内部集合当前规模；适用场景是服务层进行分页总数、容量判断或审计存在性检查。调用方不能据此推断列表载荷内容，也不能把 count 与某个外部过滤条件组合后当作筛选结果数量。
 
-适用范围：`src/security/redaction.ts`
+适用范围：`src/storage/audit-store.ts`
 
 ### 投递回执采用显式字段
 
@@ -796,19 +796,19 @@ NotificationOutbox 的 values 不向调用方直接开放。
 
 适用范围：`src/notifications/outbox.ts`
 
-### 逻辑索引仅由发件箱维护
+### 已投递索引须为私有
 
-logicalIds 的写入与读取限定在 NotificationOutbox 内。
+NotificationDispatcher 的已投递索引由类内部维护。
 
-> NotificationOutbox 的 logicalIds 应保持私有索引，由同一实例统一更新和查询，业务层不得绕过该映射直接判定重试结果。涉及重复项登记、读取及清理的发件箱操作均适用，以避免索引与 values 状态分叉。
+> NotificationDispatcher.delivered 声明为 private readonly Map，外部调用方不得直接读取或改写其中的事件。该设计让 hasSent、sentCount 与 events 统一提供受控访问，适用于 NotificationDispatcher 实例内部的状态管理。
 
-适用范围：`src/notifications/outbox.ts`
+适用范围：`src/notifications/dispatcher.ts`
 
-### 通知模板按名称注册
+### 模板清单跟随注册表更新
 
-templates 用固定名称登记各类通知，并提供对应 render 函数。
+templateNames 直接反映 templates 当前注册项，不另行维护名称列表。
 
-> templates 中的每个 Template 都必须保留稳定的 name，并用 render 读取所需业务字段，例如 orderPaid 使用 orderId。新增通知类型时应补充对应模板项，适用于模板查找与渲染入口。
+> templateNames 应通过 Object.keys(templates) 返回当前已注册模板的 string 名称集合，不单独维护另一份名称清单。这样新增、移除或替换 templates 中的定义后，清单会与注册表保持一致，避免返回过期名称。该规则适用于模板枚举、配置校验及管理入口；调用方仍需结合 renderTemplate 处理具体渲染。
 
 适用范围：`src/notifications/templates.ts`
 
@@ -844,13 +844,13 @@ canCancel 仅允许订单处于已定义的可取消状态。
 
 适用范围：`src/workflow/order-workflow.ts`
 
-### nowSeconds 产出秒级整数
+### 批次写入须先完成防重检查
 
-nowSeconds 将当前毫秒时间转换为向下取整的秒级时间戳。
+SettlementStore.create 先拒绝重复批次及重复订单，再写入批次和归属索引。
 
-> nowSeconds 必须返回整数秒，避免毫秒小数进入时间计算。适用场景是调用方需要统一时间粒度时；实现时应使用 Date.now 与 Math.floor，并避免直接返回 Date.now。
+> SettlementStore.create 必须先检查 batch.id 是否已存在，并遍历 batch.lines 确认每个 orderId 尚未进入其他结算；任一条件冲突都抛出 Error。全部检查通过后，才依次写入 this.batches 与 this.orders，避免失败时留下不完整归属。
 
-适用范围：`src/utils/time.ts`
+适用范围：`src/storage/settlement-store.ts`
 
 ### 结算与订单标识防重
 
@@ -860,13 +860,13 @@ SettlementStore 同时约束批次编号和订单归属的唯一性。
 
 适用范围：`src/storage/settlement-store.ts`
 
-### 秒偏移避免原地修改
+### 客户激活须返回新对象
 
-addSeconds 返回新的数值，不改写传入的时间值。
+activateCustomer 不修改传入对象，并返回独立的 active 客户副本。
 
-> 调用 addSeconds 时，value 与 amount 仅用于计算并返回新 number，调用方不得假设原变量被更新。这样可让基于 nowSeconds 或 ageSeconds 的流程避免共享值被意外改写，适用于所有秒数偏移场景。
+> 调用 activateCustomer 时必须保留原 customer 不变，返回值中的 active 应设为 true。这样可避免外部继续持有旧对象时意外观察到状态变化，适用于客户激活流程以及任何复用该结果的调用方。
 
-适用范围：`src/utils/time.ts`
+适用范围：`src/domain/customer.ts`
 
 ### 结算创建拒绝重复订单
 
@@ -900,13 +900,13 @@ reserveStock 在余额不足时统一拒绝，并同步递增库存版本。
 
 适用范围：`src/domain/inventory.ts`
 
-### 库存读取禁止陈旧缓存
+### 生命周期事件按固定顺序展开
 
-库存查询结果不得跨写操作长期缓存。
+orderLifecycle 先记录订单状态，再逐项追加退款事件。
 
-> GET /inventory 的 handler 每次调用 InventoryService.list，并由 page 包装分页结果，因此不得为该响应设置独立于库存状态的长期缓存。若引入缓存，initialize、receive、reserve、release、consume、transfer 成功后，须按 warehouseId 和 sku 使对应条目失效；reserve 还须覆盖 orderId 关联的 reservationId 查询。适用于库存列表读取及所有库存写入口，避免缓存与真实可用量、预留量不一致。
+> 团队约定：生成订单生命周期轨迹时，必须通过 orderLifecycle 保持事件顺序，先输出 order.status，再依次追加由 order.refunds.map 生成的 refund 条目。这样下游能够稳定识别首个状态及后续退款记录，避免各调用方自行拼接导致顺序不一致。适用范围为订单轨迹展示和事件记录；退款数量为零时，数组只包含当前状态。
 
-适用范围：`src/http/inventory-routes.ts`
+适用范围：`src/workflow/order-workflow.ts`
 
 ### 支付路由统一委托服务层
 
@@ -972,13 +972,13 @@ counts 按 OutboxMessage.state 汇总四种通知状态。
 
 适用范围：`src/notifications/outbox.ts`
 
-### 展示名统一裁剪
+### 订单读路由按需分页
 
-身份展示名须去空白并限制为八十个字符。
+订单列表仅在提供分页参数时返回分页结构。
 
-> 调用 sanitizeDisplayName 处理身份展示名时，必须先通过 trim 清除首尾空白，再用 slice 将结果截断到八十个字符。该规则用于所有需要展示或持久化身份名称的入口，避免异常长值扩大界面、存储和日志负载；它只规范展示文本，不应替代 resolveIdentity 对身份主体的校验。
+> registerOrderRoutes 约定：GET /orders 的 handler 先执行 service.list(filters(query))，只有 query.offset 或 query.limit 任一存在时才通过 page(matched, pageQuery(query)) 包装结果；两者都未提供时直接返回 matched。原因是保留完整列表的既有响应，同时让显式分页请求采用统一结构。规则适用于 /orders 读取路由，不扩展到 /orders/export 和 /orders/count，后两者分别直接返回 service.exportRows(filters(query)) 与 service.count(filters(query))。
 
-适用范围：`src/security/identity.ts`
+适用范围：`src/http/order-routes.ts`
 
 ### topics 查询须可重放
 
@@ -988,13 +988,13 @@ topics 复用 list 查询边界，并通过 auditTopic 统一主题归类。
 
 适用范围：`src/services/audit-service.ts`
 
-### 跨仓转移必须事务提交
+### 订单筛选条件采用统一结构
 
-transfer 用单事务完成扣减与入库，避免半完成状态。
+OrderFilters 集中承载订单列表、计数与汇总查询的筛选参数。
 
-> InventoryService.transfer 调用 store.transaction，把两个仓位的库存变更放进同一隔离作用域：先通过 reserveStock 锁定 source 库存，再由 consumeStock 扣减，并用 receiveStock 增加 destination。sourceId 与 destinationId 相同时直接抛出 Error。原因是中途失败会造成库存只扣未加；该约束适用于所有跨仓 transfer 调用。
+> 团队约定所有订单查询条件统一放入 OrderFilters，不在调用处临时拼装零散参数。该接口覆盖 memberId、status、minTotalCents、minRefundCents、from 与 to，可供 OrderService/list、OrderService/count 和 OrderService/summarize 复用。这样既能限制查询入口的参数形态，也能让筛选语义在列表、计数与汇总结果间保持一致；新增筛选条件时，应先扩展 OrderFilters，再同步各查询方法的处理逻辑。
 
-适用范围：`src/services/inventory-service.ts`
+适用范围：`src/services/order-service.ts`
 
 ### MemberRow 输入边界
 
@@ -1228,13 +1228,13 @@ begin、succeed和reject路由只转发调用，失败后的状态一致性由De
 
 适用范围：`src/http/delivery-routes.ts`
 
-### 库存写操作必须支持安全重放
+### 配置更新采用显式值集合
 
-写路由要能区分首次执行与同请求重试，禁止重复产生库存流水。
+updateSettings 仅接收值集合并委托 merge，调用方负责准备合法输入。
 
-> registerInventoryRoutes 注册的 initialize、receive、reserve、consume 与 transfer 都可能由客户端在响应丢失后重发。团队约定每个写动作必须基于稳定业务标识实现可重放语义：首次请求提交结果，后续相同请求返回原结果且不再生成流水；不同标识即使参数相同也不得误判为重试。reserve 可使用 reservationId，其他动作需由 InventoryService 定义并持久化对应的去重记录。
+> 调用 updateSettings 时，只传入 Record\<string, unknown> 形式的 values，并交由 SettingsStore.merge 执行合并；非法键、类型不匹配或越界值必须在调用前拦截。该约束适用于所有配置写入入口，避免把未校验数据带入 Settings，同时让错误由校验层以明确类型返回。
 
-适用范围：`src/http/inventory-routes.ts`
+适用范围：`src/config/settings.ts`
 
 ### 库存读写绕过路由缓存
 
@@ -1332,13 +1332,13 @@ events 复制事件与 data，防止调用方改动内部送达记录。
 
 适用范围：`src/notifications/dispatcher.ts`
 
-### OutboxMessage 固定序列化契约
+### 事件查询必须使用原始标识
 
-统一通知消息的持久化字段、状态枚举与时间字段语义。
+hasSent 按传入的事件标识查询 delivered，并返回布尔结果。
 
-> OutboxMessage 的序列化结构必须固定包含 id、logicalId、recipient、template、data、state、attempts、nextAttemptAt、createdAt，成功送达时写入 deliveredAt，失败后记录 lastError。state 仅允许 pending、delivering、delivered、failed 四种值，data 使用 Record\<string,string>，避免存储层与投递层各自扩展字段而破坏消息兼容；该约定适用于通知 outbox 的写入、读取、领取、完成与失败处理。
+> NotificationDispatcher.hasSent 的查询键是调用方传入的 eventId，匹配范围限定在 delivered 中的事件标识。调用方应传入与 dispatch 接收事件时相同的标识，以确认该事件是否已由当前 NotificationDispatcher 记录；若标识格式不同，查询结果不能代表同一事件的状态。该方法只做集合成员判断，不检查事件载荷内容，也不执行任何发送动作。
 
-适用范围：`src/notifications/outbox.ts`
+适用范围：`src/notifications/dispatcher.ts`
 
 ### 复制消息时隔离data引用
 
@@ -1428,13 +1428,13 @@ reject 拒绝空原因，并按 DeliveryPolicy 计算下一次重试。
 
 适用范围：`src/services/delivery-service.ts`
 
-### 释放库存须原子落库
+### 订单路由避免额外副作用
 
-release 同步更新预留与库存，并以库存版本防止并发覆盖。
+三个订单读取路由只查询并返回结果，不写日志。
 
-> InventoryService 的 release 必须先通过 reservation 读取当前预留，再计算 released 状态与释放后的库存；putStock 携带 stock.version，putReservation 保存同一业务变更。版本条件用于阻止并发写覆盖，因此调用方不得绕过 release 单独改库存。该规则适用于取消预留、释放占用及其重试场景；若写入失败，调用方需按库存与预留的持久化结果判断是否补偿。
+> registerOrderRoutes 内的 GET handler 仅执行 objectInput、filters 以及 service.list、service.exportRows 或 service.count，没有日志写入、队列投递或审计调用。原因是查询响应应保持无副作用，避免重复请求制造额外记录；观测需求应由路由框架的通用机制承担，而非散落在订单处理器中。
 
-适用范围：`src/services/inventory-service.ts`
+适用范围：`src/http/order-routes.ts`
 
 ### 库存查询禁止隐式造零
 
@@ -1476,13 +1476,13 @@ PaymentService 统一通过 makeId 生成支付标识，调用方负责提供唯
 
 适用范围：`src/services/payment-service.ts`
 
-### now 统一提供支付时间戳
+### 布尔配置必须显式取值
 
-支付创建时间由注入的 now 提供，禁止各业务路径自行取时。
+settingBoolean 拒绝隐式转换并按类型选择配置。
 
-> PaymentService 在构造时接收 now: () => number，create 时将其结果传给 createPayment，使创建时间与标识生成一样由运行时统一控制。团队约定 now 必须返回毫秒级时间戳，并保证同批调用中的时间语义一致；需要复现或排序支付记录时，应注入固定时钟，而不是在路由或领域逻辑中另取系统时间。该规则仅约束 PaymentService 的创建时间来源。
+> 团队约束布尔配置必须经由 settingBoolean(settings, key, fallback) 读取。函数只有在 settings\[key] 为 boolean 时返回配置本身，缺失、null、字符串或其他类型均返回 fallback。这样可避免服务层把非布尔值隐式当作开关，并确保 updateSettings 写入的配置符合声明类型。适用于功能开关及参数控制项；调用处应明确给出默认策略，不能用真假值混合类型绕过校验。
 
-适用范围：`src/services/payment-service.ts`
+适用范围：`src/config/settings.ts`
 
 ### 退款存储依赖固定注入
 
@@ -1516,13 +1516,13 @@ EventStore.clear 通过截断 values 清空当前存储，不替换实例。
 
 适用范围：`src/storage/event-store.ts`
 
-### reservation 失败原子性
+### 订单筛选参数边界
 
-预约写入失败时不得留下半完成状态。
+registerOrderRoutes 调用 filters 时，须拒绝非法状态、类型及倒置区间。
 
-> InventoryStore.reservations 用于集中保存 Reservation，任何涉及预约的写入都必须以整体成功或整体未变更为准。操作中途抛出异常时，不得只写入一条预约、关联库存已扣减但记录缺失，或反向出现孤立的库存变化。适用于多步预约流程和需要重试的调用方；失败分支应回滚已产生的变更。
+> 订单列表查询统一经 filters 转换输入：optionalString 只接受字符串，integerInput 只接受整数；status 仅允许 draft、paid、partially-refunded、refunded、cancelled。若同时给出 from 与 to，且 from 大于 to，立即以 Error 拒绝。该约束适用于 registerOrderRoutes 接收的订单筛选请求，可避免无效条件进入存储层并导致错误结果。
 
-适用范围：`src/storage/inventory-store.ts`
+适用范围：`src/http/order-routes.ts`
 
 ### 库存写入须显式处理版本
 
@@ -1580,13 +1580,13 @@ copyBatch 同时复制批次和 lines，避免嵌套数组被外部修改。
 
 适用范围：`src/storage/settlement-store.ts`
 
-### 结算列表先按账户过滤
+### 配置快照读取规则
 
-list 在读取阶段按 accountId 限定结果，并按创建时间倒序返回副本。
+settingsSnapshot 通过 SettingsStore.read 获取当前配置。
 
-> SettlementStore.list 的账户范围由可选参数 accountId 决定：参数为 undefined 时读取全部批次，指定后仅保留 accountId 匹配的记录。结果先按 createdAt 降序排列，同一时间再以 id.localeCompare 确定稳定次序，最后通过 copyBatch 隔离存储状态。该约定适用于结算列表查询；权限边界由调用方先确定。
+> 团队约定需要观察当前配置状态的调用方使用 settingsSnapshot(store)，由该函数统一调用 store.read() 并返回 Settings。不要在服务层或路由中自行访问 SettingsStore，以避免各层取得配置的时机和来源不一致。该规则适用于配置校验、启动后状态判断及请求处理前的配置读取；需要改变快照来源时，应调整 SettingsStore.read 与 loadSettings 的职责边界。
 
-适用范围：`src/storage/settlement-store.ts`
+适用范围：`src/config/settings.ts`
 
 ### 限定重试次数边界
 
@@ -1662,13 +1662,13 @@ ReserveInput 仅承载标量请求字段，调用方不应依赖对象后续可�
 
 适用范围：`src/services/inventory-service.ts`
 
-### revision 防止脏覆盖
+### 订单计数须校验筛选条件
 
-InventoryStore.transaction 用 revision 识别事务期间的外部写入冲突。
+OrderService.count 应拒绝无效筛选条件，避免将异常输入解释为有效订单集合。
 
-> InventoryStore.transaction 执行隔离写入前记录 revision，完成后若该值变化便抛出 Error。原因是可发现事务期间发生的并发更新，避免把过期结果覆盖到当前存储；该规则适用于 InventoryStore.transaction 及其 operation 涉及的写入。
+> OrderService.count 调用 this.list(filters) 前，应先按 OrderFilters 的约束检查 filters；筛选条件无效时直接拒绝，不返回基于 list 结果推导的数量。这样可避免错误条件被静默接受，并让订单统计接口与列表接口保持一致的适用范围。
 
-适用范围：`src/storage/inventory-store.ts`
+适用范围：`src/services/order-service.ts`
 
 ### version 标记库存版本
 
@@ -1726,45 +1726,45 @@ AuditEntry 必须完整携带追踪、载荷与时间信息。
 
 适用范围：`src/storage/audit-store.ts`
 
-### 审计载荷并发写入风险
+### 审计查询应拒绝矛盾区间
 
-auditPayload 不承担并发写入控制，冲突由调用方处理。
+AuditQuery 的起止范围若同时提供，必须满足先后顺序。
 
-> auditPayload 仅把 AuditEntry 的 payload 转换为可审计载荷，不执行写入或版本协商。并发更新同一记录时仍可能发生覆盖，因此调用方应负责冲突检测、串行化或重试，避免把该函数当作并发保护。
+> AuditQuery 允许 action、actorId、from 与 to 独立缺省，但 from 和 to 同时出现时不得形成倒置区间；AuditService 应在查询前判定其先后关系并拒绝矛盾条件，避免无效范围被静默接受。该规则适用于所有使用 AuditQuery 的列表与筛选入口，边界值仍按调用方传入的数据处理。
 
-适用范围：`src/security/audit-policy.ts`
+适用范围：`src/services/audit-service.ts`
 
-### 脱敏入口限定值类型
+### 审计容器存在并发可见性风险
 
-redactSensitive 拒绝把非对象输入误当成可遍历结构。
+AuditStore.values 由写操作与读操作共享，异步并发时需关注读取时序。
 
-> redactSensitive 只接受对象或数组作为递归入口；遇到 string、number、boolean 等原始值时直接返回原值。实现时先用 typeof value 判断类型，再用 Object.entries 遍历对象。这样可避免对字符串执行条目遍历或误写业务字段，适用范围是所有经过 redactSensitive 的审计载荷。
+> AuditStore.values 接收 AuditEntry，而 all、byAction 和 latest 都从同一容器读取。若多个异步流程同时调用 append 与查询，结果可能只反映某个执行时点，不能把一次读取视作全局一致的审计快照。需要稳定视图时，应先固定事件边界再调用查询方法。
 
-适用范围：`src/security/redaction.ts`
+适用范围：`src/storage/audit-store.ts`
 
-### 令牌脱敏重试须幂等
+### append 返回原条目引用
 
-redactText 重复执行不应扩大遮盖范围或破坏普通文本。
+AuditStore.append 保存副本，但返回传入的 entry 引用。
 
-> redactText 的结果必须允许再次调用 redactText 而不扩大遮盖范围；Bearer 凭据和 sk- 密钥被替换后，不得让已遮盖文本中的剩余片段再次触发匹配。该约束适用于日志写入、异常上报以及网络重试前后的字符串清理。
+> AuditStore.append 先把 entry 复制进 values，随后仍返回原 entry。调用方若在写入后继续修改该对象，存储副本不会同步变化，却可能因返回值而误以为修改已经生效。需要写入后保持稳定状态时，应直接采用 append 返回值，不再改写原 entry。
 
-适用范围：`src/security/redaction.ts`
+适用范围：`src/storage/audit-store.ts`
 
-### safeAudit 替换条目载荷
+### 成员审计路由须绑定固定处理器
 
-safeAudit 通过 auditPayload 构造返回载荷。
+registerMemberAuditRoute 应将成员列表请求交给指定服务。
 
-> safeAudit 接收 AuditEntry，并返回展开 entry 后替换 payload 的新对象，替换结果来自 auditPayload。此入口决定对外提供的审计载荷形态，适用于调用 safeAudit 生成可输出条目的数据出口。
+> registerMemberAuditRoute 注册 /members/audit 时，应让 GET handler 始终调用当前 MemberService 实例的 list，并明确 method 为 GET。若后续替换注册流程，必须保留这一绑定关系，避免路由落入其他处理器或绕过成员权限检查。该规则适用于该函数注册的成员查询入口及新增同类路由时的注册审查。
 
-适用范围：`src/security/audit-policy.ts`
+适用范围：`src/http/member-routes.ts`
 
-### 发件箱标识不得复用
+### Template 数据须适配字符串上下文
 
-enqueue 遇到重复消息标识时直接报错，避免记录键冲突。
+Template.render 的输入限定为字符串映射，避免隐式类型转换造成内容偏差。
 
-> NotificationOutbox.enqueue 写入前检查 this.values.has(input.id)；若 Outbox 标识已存在，即使输入带新的 logicalId，也抛出 Error，不覆盖原消息。这样可防止 pending、attempts 与 nextAttemptAt 被意外重置，适用于所有进入发件箱的 OutboxMessage。
+> Template.render 接收 Record\<string, string> 类型的 data，模板变量应先转换为字符串再传入。这样可避免数字、布尔值等值在渲染阶段产生不一致结果，并让模板输出便于检查。该约束适用于 templates 中的所有模板定义及其调用方；新增模板时也必须遵守 data 的键和值均为字符串的边界。
 
-适用范围：`src/notifications/outbox.ts`
+适用范围：`src/notifications/templates.ts`
 
 ### 同步派发无重试等待
 
@@ -1798,13 +1798,13 @@ EventStore.latest 直接暴露内部事件对象，调用方修改会影响后�
 
 适用范围：`src/storage/event-store.ts`
 
-### 清空操作不可中途失败
+### 订单筛选须拒绝倒置区间
 
-values 的批量清理应保持原子性。
+filters 在同时收到 from 与 to 时必须检查先后顺序，并仅接受已定义状态。
 
-> EventStore.clear 操作 values 时应一次性完成清空，避免逐项删除过程中出现异常而留下部分记录。失败时应保留原有 values，供调用方重试或恢复；该规则适用于测试重置和存储生命周期清理。
+> filters 构造 OrderFilters 时，应逐项处理 memberId、status、from 与 to；status 仅允许 draft、paid、partially-refunded、refunded、cancelled，且 from 大于 to 时抛出 Error。这样可防止订单列表落入空区间或非法状态查询，适用于 registerOrderRoutes 接收列表筛选参数的入口。
 
-适用范围：`src/storage/event-store.ts`
+适用范围：`src/http/order-routes.ts`
 
 ### 取消操作缺少版本校验
 
@@ -1918,21 +1918,21 @@ OrderStatus 的异步更新必须按合法相邻迁移执行，防止退款与�
 
 适用范围：`src/http/inventory-routes.ts`
 
-### 库存写操作需幂等
+### 已取消订单才允许重开
 
-initialize、receive、reserve 等写操作必须支持安全重试。
+reopenOrder 拒绝把非 cancelled 订单恢复为 draft。
 
-> registerInventoryRoutes 暴露的库存写接口应让调用方安全重试：initialize 需按仓库与 SKU 幂等，receive 需避免重复入库，reserve 需以 reservationId 去重，release 需重复调用不产生二次释放，consume 与 transfer 同样需要业务键约束。若客户端超时后重发 POST，服务层必须返回已有结果或明确冲突，不能再次改变库存。适用范围是 registerInventoryRoutes 注册的全部库存变更接口及其实体服务实现。
+> 团队约定：调用 reopenOrder 前必须确认 order.status 为 cancelled，否则函数会抛出 Error，订单保持原状态。成功后通过对象展开生成新的 Order，并将其 status 改为 draft。该限制用于防止已支付、已退款或仍在处理中的订单绕过正常流程重新进入草稿态，适用于订单工作流中的重开操作。
 
-适用范围：`src/http/inventory-routes.ts`
+适用范围：`src/workflow/order-workflow.ts`
 
-### 通知路由的时钟依赖风险
+### prepare 缺少结算可观测信息
 
-POST 通知入口将事件直接交给通知服务；若事件时间语义不统一，跨时区、延迟入队或批量补发时，通知、订单与结算流水顺序可能不一致，影响审计与结算。
+prepare 未记录批次关键上下文，故障定位依赖补充埋点。
 
-> registerNotificationRoutes 将 POST /notifications 的 event 原样交给 NotificationService.notify，将批量 events 交给 notifyMany。团队规则要求通知链路的发送时间、重试时间和审计时间采用统一时钟语义，由服务层显式处理事件时间；路由层不得把接收时刻默认为业务发生时刻。该约束适用于单条通知、notifyMany 批量通知及需要还原发生时间的审计场景。
+> 风险：`SettlementService.prepare` 仅将 `orders` 转为 `lines`、创建 `SettlementBatch` 并调用 `store.create`，没有输出可关联的结算上下文。若创建失败或结果异常，仅凭现有日志难以确认涉及哪些 `accountId`、`feeBasisPoints` 及订单范围。适用范围：`SettlementService` 的结算准备入口；需在不暴露订单明细的前提下补充批次级日志或追踪字段。
 
-适用范围：`src/http/notification-routes.ts`
+适用范围：`src/services/settlement-service.ts`
 
 ### 收入汇总需区分退款
 
@@ -2030,13 +2030,13 @@ Money.subtract 依赖显式 other，负结果会由 Money 构造器拒绝。
 
 适用范围：`src/domain/money.ts`
 
-### Order重试需防重复副作用
+### 发送计数以接收集合为准
 
-重试applyRefund和addLine前必须幂等，否则会累计订单副作用。
+sentCount 读取 delivered 的元素数量，作为当前发送统计值。
 
-> Order 以 id 作为业务聚合标识，队列重试或 HTTP 重放仍可能再次执行 applyRefund、addLine；若操作只追加数据而没有幂等键，同一请求会重复增加 refunds、lines 或 internalNotes。调用层应先按业务请求标识或退款记录去重，再提交聚合变更；适用范围为结算回调、通知回执、队列消费和可能被客户端重试的订单命令。
+> NotificationDispatcher.sentCount 直接返回 delivered.size，以集合中已保存的事件数量表示发送计数。该口径包含被 dispatch 接收并记录的事件，不等同于外部通道实际完成发送的次数，因此只适合衡量 NotificationDispatcher 接收阶段的结果。若统计口径必须代表最终送达数量，应由独立状态记录提供，不能把 sentCount 的结果解释成投递成功率。
 
-适用范围：`src/domain/order.ts`
+适用范围：`src/notifications/dispatcher.ts`
 
 ### 支付模型限制跨层边界
 
@@ -2054,13 +2054,13 @@ receipts在无匹配记录时应返回空分页结果，而非把边界判断推
 
 适用范围：`src/http/delivery-routes.ts`
 
-### 库存路由权限缺口
+### 读取配置必须走统一入口
 
-registerInventoryRoutes未显式鉴权，库存变更可能暴露给未授权调用者。
+通过 loadSettings 统一读取，避免各模块直接访问 SettingsStore。
 
-> registerInventoryRoutes 的各条 handler 仅负责解析参数并调用 InventoryService，片段内未见身份、角色或权限判断。若 RouteRegistry 不提供统一授权层，任何能访问 /inventory/initialize、/inventory/receive、/inventory/reserve、/inventory/release、/inventory/consume 或 /inventory/transfer 的调用者都可能改变库存。新增库存写路由时须同步确认鉴权入口，避免仅依赖网络隔离。
+> 配置读取统一调用 loadSettings，由该函数委托 SettingsStore.read 返回 Settings；业务层不得自行拼装或缓存另一份配置。这样可让读取入口、返回类型与后续 updateSettings 的数据边界保持一致，适用于服务层、HTTP 路由及领域模型中所有需要配置的场景。
 
-适用范围：`src/http/inventory-routes.ts`
+适用范围：`src/config/settings.ts`
 
 ### 库存查询必须分页截断
 
@@ -2368,13 +2368,13 @@ exportRows 的列名和金额单位属于持久化接口。
 
 适用范围：`src/services/order-service.ts`
 
-### 敏感键集合集中维护
+### 审计存储限定在进程内
 
-敏感键名统一收录在 SENSITIVE_KEYS，新增项需明确凭据语义。
+AuditStore 仅维护当前进程中的审计记录，不承担持久化职责。
 
-> 敏感键名应登记在 SENSITIVE_KEYS，由 redactSensitive 与 isSensitiveKey 共同使用，避免多处名单漂移；适用于安全导出入口新增常见凭据字段时。
+> AuditStore 将 AuditEntry 保存在实例字段 values 中，因此记录仅在当前进程和该实例生命周期内可用。若业务要求跨重启保留历史，应由外部存储承担持久化，AuditStore 继续负责收集与查询，避免调用方误以为 count 或 latest 已覆盖持久化数据。
 
-适用范围：`src/security/redaction.ts`
+适用范围：`src/storage/audit-store.ts`
 
 ### 审计标识生成保持可替换
 
@@ -2440,13 +2440,13 @@ SettlementBatch 仅允许从草稿依次进入审批与支付状态。
 
 适用范围：`src/domain/settlement.ts`
 
-### isBefore 采用严格小于
+### 客户标签按字段组合生成
 
-isBefore 用严格小于判断先后，边界相等不成立。
+customerLabel 使用姓名与邮箱组合展示客户，不写入或改变客户记录。
 
-> isBefore(a, b) 必须保持严格小于语义，a 与 b 相等时返回 false；该规则用于时间先后及到期边界判断，避免把同一时刻误判为已过期。涉及 isAfter 或 sameDay 的调用也应采用同一严格边界约定。
+> customerLabel 应根据 customer.name 与 customer.email 组合出 string，作为读取侧的展示结果，不得反向写回 Customer。该规则适用于客户列表、搜索结果和详情区域，确保标签生成不会改变客户实体或其他调用方持有的数据。
 
-适用范围：`src/utils/time.ts`
+适用范围：`src/domain/customer.ts`
 
 ### 配置读取返回快照
 
@@ -2584,13 +2584,13 @@ nextId 按全局序列生成带前缀的四位三十六进制标识，供订单�
 
 适用范围：`src/utils/id.ts`
 
-### 时间测试必须固定秒级时钟
+### 生产环境判定边界
 
-通过注入 nowSeconds 的结果构造稳定的时间夹具，避免测试依赖真实系统时钟。
+isProduction 只依据 environment 返回环境判定结果。
 
-> 订单、库存和通知链路的测试不要直接读取系统当前时间；测试数据先记录 nowSeconds 的返回值，再以此构造事件时间。需要比较先后关系时使用 isAfter 或 isBefore，并让边界值保持明确的相等、不等和倒序场景。这样测试重放时不依赖执行时刻，可避免时间字段漂移导致断言偶发失败，适用于涉及 ageSeconds、sameDay 或 within 的单元测试与集成测试夹具。
+> 团队约定使用 isProduction(settings) 作为运行环境的统一判定入口，只有 settings.environment 等于 production 时才返回 true。调用方传入当前加载的 Settings 对象即可获得布尔结果，避免在服务层、HTTP 路由或存储层各自比较环境名称。该规则适用于需要区分生产配置与本地配置的分支；若要修改环境来源，应调整 Settings 的加载与更新流程，而不是绕过此函数。
 
-适用范围：`src/utils/time.ts`
+适用范围：`src/config/settings.ts`
 
 ### 标签更新采用不可变快照
 
@@ -2656,21 +2656,21 @@ discountLine拒绝非有限值及0到100之外的折扣比例。
 
 适用范围：`src/domain/settlement.ts`
 
-### 库存路由沿用服务异步边界
+### 取消判断不修改订单
 
-路由返回服务调用结果，异步与队列语义由 InventoryService 统一管理。
+canCancel 只读取状态并返回布尔值，不改变传入对象。
 
-> registerInventoryRoutes 的 handler 直接 return service.initialize、service.receive、service.consume 或 service.transfer 的执行结果，不额外等待队列投递，也不把 Promise 拆成后台任务。这样可保持库存写入、审计和后续消息处理的先后边界；涉及异步副作用的库存操作，应在 InventoryService 内定义等待策略后再由路由透传。
+> 背景事实：canCancel 是无副作用的状态查询函数，仅读取 order.status 并返回 boolean，不会更新订单字段或推进订单生命周期。调用方可重复查询同一 Order，而不依赖对象是否已被其他流程处理。该约定适用于取消按钮可用性、接口前置判断等只读场景；真正取消仍须调用 cancelOrder，并单独处理 cancelReason 等业务输入。
 
-适用范围：`src/http/inventory-routes.ts`
+适用范围：`src/workflow/order-workflow.ts`
 
-### 单项库存操作不走批量语义
+### 过滤过程保持同步边界
 
-库存变更接口按单仓、单 SKU 处理，批量需求需独立建模。
+filters 同步解析条件，不引入异步等待或队列调度。
 
-> registerInventoryRoutes 中 service.initialize 与 service.receive 每次接收一个 warehouseId 和一个 sku，service.reserve 也只描述一个订单与 SKU 的预留；GET /inventory 则通过 service.list 和 pageQuery 返回列表。原因是单据路径需要明确失败归属，不能把多条记录混入一次结果；批量库存命令应由单独接口定义，而不是复用这些单项参数。
+> filters 是同步函数，从 input 读取 memberId、status、from 和 to，并通过 optionalString、integerInput 构造 OrderFilters；它不执行异步任务，也不进入队列。调用方可在同一处理流程内立即判断成功或捕获 Error，因此订单查询的输入拒绝不会产生等待、延迟消费或乱序完成的问题。
 
-适用范围：`src/http/inventory-routes.ts`
+适用范围：`src/http/order-routes.ts`
 
 ### 库存路由测试依赖显式标识
 
@@ -2736,13 +2736,13 @@ filters 只校验调用方传入的时间边界，不隐式读取当前时钟。
 
 适用范围：`src/notifications/dispatcher.ts`
 
-### 历史入队按逻辑标识去重
+### 清空操作移除全部接收记录
 
-enqueue 兼容逻辑标识复用，但拒绝载荷冲突和重复实体标识。
+clear 删除 delivered 中的全部记录，适合隔离测试场景。
 
-> 调用 NotificationOutbox.enqueue 入队时，先用 logicalIds 查找历史消息。若 logicalId 已存在，仅当 recipient 与 template 均一致时返回已有 OutboxMessage；载荷发生变化则抛出 Error，避免同一业务通知被错误改写。实体标识冲突也直接报错。该约定适用于迁移存量通知、重放事件及重复请求场景，新增消息仍须提供唯一 id。
+> NotificationDispatcher.clear 调用 delivered.clear，移除当前保存的全部 NotificationEvent 记录。该操作会让此前的 sentCount 归零，并使 hasSent 对这些事件返回 false；events 随后也不会再返回已清空的内容。它适合测试用例之间重置状态或显式结束当前工作区，调用方无需逐条删除，也不会保留可供后续查询的接收记录。
 
-适用范围：`src/notifications/outbox.ts`
+适用范围：`src/notifications/dispatcher.ts`
 
 ### 模板先登记后渲染
 
@@ -2800,13 +2800,13 @@ create 仅负责按单笔参数构造并保存 Invoice。
 
 适用范围：`src/services/invoice-service.ts`
 
-### 订单筛选采用静默排除
+### 文本配置读取约定
 
-OrderService.list 按会员、状态、金额和时间过滤，不匹配项直接排除。
+settingText 仅接受字符串，并为缺失或异型值兜底。
 
-> OrderService.list 接收 OrderFilters，并对 memberId、status、minTotalCents、minRefundCents、from 和 to 逐项判断；不满足任一条件的订单返回 false。金额分别通过 orderTotal(order).cents 与 refundTotal(order).cents 比较，时间直接比较 createdAt。此处只适合订单集合的只读筛选，不会因无效条件抛出错误；调用方需在进入该方法前完成参数格式与业务范围校验。
+> 团队约定使用 settingText(settings, key, fallback) 获取文本配置。实现先检查 settings\[key] 是否为 string，只有类型匹配才返回配置值，否则采用 fallback。该做法避免把其他类型直接交给队列消息、通知模板或服务参数，减少运行时转换造成的行为偏差。适用范围是所有按名称读取文本配置的调用点；调用方必须根据配置用途选择可接受的默认文本。
 
-适用范围：`src/services/order-service.ts`
+适用范围：`src/config/settings.ts`
 
 ### summarize 固定金额计算次序
 
@@ -2962,13 +2962,13 @@ copyMessage 必须同时复制 message 和 data。
 
 适用范围：`src/notifications/outbox.ts`
 
-### 身份输入须受长度约束
+### 取消原因须从专用备注提取
 
-IdentityInput 中的客户端字符串必须设置长度上限，避免异常输入扩大处理成本。
+cancelReason 只解析 cancelled: 前缀的内部备注，避免把普通备注误判为取消原因。
 
-> IdentityInput 接收的 clientDisplayName 与 clientMemberId 应在入口限制长度，避免超长字符串占用过多内存并拖慢 sanitizeDisplayName 等处理。该约束适用于所有调用 IdentityInput 的身份解析场景，输入超限时直接拒绝或截断。
+> cancelReason 应仅从 order.internalNotes 中查找以 cancelled: 开头的条目，并使用 slice 去掉该前缀后返回；未命中时返回 undefined。原因是 internalNotes 还可能承载其他订单流转信息，宽松匹配会污染取消原因。适用范围为订单取消流程及读取取消原因的调用方。
 
-适用范围：`src/security/identity.ts`
+适用范围：`src/workflow/order-workflow.ts`
 
 ### 事件载荷须隔离未知字段
 
@@ -3098,13 +3098,13 @@ auditTopic 只生成主题名，不能据此假定消息已入队或可安全重
 
 适用范围：`src/security/audit-policy.ts`
 
-### 敏感键判断的运行时边界
+### all 返回隔离副本
 
-isSensitiveKey 只做字符串键匹配，不应被当作对象值的深度脱敏机制。
+AuditStore.all 复制条目与载荷，阻断调用方直接改动内部记录。
 
-> isSensitiveKey 将输入键转为小写后调用 SENSITIVE_KEYS.has，返回 boolean；因此它只覆盖 SENSITIVE_KEYS 明确列出的键名，无法识别嵌套结构、相似字段或对象值中的敏感数据。涉及 redactSensitive、redactText 或 safeJson 的调用方，不能把键名未命中理解为内容安全；需要按字符串、对象及日志输出等实际数据类型分别选择脱敏路径。
+> AuditStore.all 通过 map 复制每个 AuditEntry，并重新创建 payload 对象，避免调用方获得 this.values 中的同一引用。团队读取审计列表时应只依赖返回副本进行展示或后续处理，不要把结果当作内部存储进行原地修改；否则一次字段赋值可能意外影响后续 all 查询。该规则适用于 AuditStore 的列表读取及其调用方对返回对象的处理。
 
-适用范围：`src/security/redaction.ts`
+适用范围：`src/storage/audit-store.ts`
 
 ### 审计追加与查询解耦
 
@@ -3170,13 +3170,13 @@ quantity 统一拒绝非安全整数和零值，避免非法数量进入库存�
 
 适用范围：`src/domain/inventory.ts`
 
-### 预留失败统一映射业务错误
+### 先校验过滤条件再查询
 
-reserveStock 对库存不足返回 FORBIDDEN，不混用参数校验异常。
+filters 完成全部字段和区间校验后才返回过滤条件。
 
-> reserveStock 先通过 quantity 排除非法数量，再以 amount 和 item.available 比较可用库存；不足时抛出带 ERROR_CODES.FORBIDDEN 的 DomainError，而不是普通 Error。该区分让 HTTP 路由或服务层能够把业务拒绝映射为稳定的错误码，同时参数类型错误仍保持清晰。规则适用于单次预留请求，不包含批量预留中的部分成功语义。
+> filters 的执行顺序固定为 memberId、status、from、to：optionalString 与 integerInput 负责类型检查，status 还必须属于允许集合，from 大于 to 时抛出 Error。任一条件不合法都会在生成 OrderFilters 前终止，防止部分构造的过滤对象被查询逻辑使用。
 
-适用范围：`src/domain/inventory.ts`
+适用范围：`src/http/order-routes.ts`
 
 ### 避免无界发票聚合
 
@@ -3258,13 +3258,13 @@ registerReportRoutes 按收入、状态、会员顺序注册三个 GET 路由。
 
 适用范围：整个项目
 
-### logicalIds不能替代主键索引
+### 事件列表隔离内部数据
 
-logicalIds只承担幂等映射，不能充当消息主键。
+events 返回复制后的快照，调用方修改结果不会改写内部记录。
 
-> NotificationOutbox.logicalIds 只用于把业务逻辑标识映射到消息 id，不应覆盖 values 中以 id 索引的主记录。两者职责分离后，重复 enqueue 可以依据 logicalId 识别既有消息，而投递状态仍以具体 OutboxMessage 为准。若用逻辑标识直接承载状态，多个重试或版本化消息会互相覆盖，导致 complete 与 fail 更新错误记录。
+> NotificationDispatcher.events 先取得 delivered 中保存的事件，再复制每个事件及其 data 后返回数组。这样，调用方即使修改返回对象或嵌套数据，也不会直接改变 NotificationDispatcher 内部记录。该隔离规则适用于读取事件列表的测试、诊断和业务调用场景；需要改变内部状态时，应通过明确的管理操作完成，不能依赖修改 events 的返回值。
 
-适用范围：`src/notifications/outbox.ts`
+适用范围：`src/notifications/dispatcher.ts`
 
 ### 认领失败会污染状态
 
@@ -3282,13 +3282,13 @@ CSV 字段顺序统一由 csvHeader 管理，禁止其他位置另写同义表�
 
 适用范围：`src/reports/order-report.ts`
 
-### safeJson 仅负责脱敏序列化
+### latest 须处理零上限
 
-safeJson 先调用 redactSensitive，再执行 JSON.stringify。
+AuditStore.latest 对 limit 边界缺少约束，零值会得到意外结果。
 
-> safeJson 只完成敏感字段脱敏与 JSON.stringify，不承担鉴权或访问控制。调用方若把 safeJson 当作权限检查入口，可能让未获授权的数据先进入序列化流程；访问控制必须在进入 safeJson 前完成。该函数适用于日志、诊断输出等需要隐藏 SENSITIVE_KEYS 命中字段的场景，不适合作为接口授权依据。
+> AuditStore.latest 直接对 all 的结果执行 slice(-limit) 并 reverse，传入 limit 为零时 slice(-0) 等同于 slice(0)，因此会返回完整列表而不是空列表。服务层调用 latest 前必须自行校验 limit，只允许传入正整数；若未来要统一边界语义，应在方法入口处理非正数。问题适用于审计列表查询及任何可能传入零值的调用路径。
 
-适用范围：`src/security/redaction.ts`
+适用范围：`src/storage/audit-store.ts`
 
 ### 审计区间禁止倒置
 
@@ -3362,13 +3362,13 @@ get 查询不到 SettlementBatch 时直接抛出 Error。
 
 适用范围：`src/services/settlement-service.ts`
 
-### stocks 返回值隔离
+### 未知状态不得视为可取消
 
-InventoryStore 对外返回库存副本，阻断调用方修改内部状态。
+canCancel 对非白名单状态返回 false，避免误取消。
 
-> InventoryStore.stocks 保存内部 StockItem，getStock 返回浅拷贝而非 Map 中原对象。这样调用方修改返回值的字段，不会绕过 putStock 改写 stocks，也不会跳过 version 检查和 revision 更新。适用于所有读取库存并继续加工数据的调用路径；若副本中还嵌套可变对象，嵌套部分仍需单独处理。
+> canCancel 采用明确状态白名单，order.status 未命中 draft、paid 或 partially-refunded 时一律返回 false，而不是把未知状态当成可操作。调用 cancelOrder 时，空集合式的判断结果必须按禁止处理，以避免新状态、异常数据或边界订单被误取消。该约束适用于取消入口及其上层流程，不能通过默认放行绕过检查。
 
-适用范围：`src/storage/inventory-store.ts`
+适用范围：`src/workflow/order-workflow.ts`
 
 ### 预约读取不引入动态时间
 
@@ -3378,13 +3378,13 @@ getReservation 仅按标识查询，保留跨流程读取的稳定性。
 
 适用范围：`src/storage/inventory-store.ts`
 
-### 预约写入保留调用方字段
+### 生产判定只认环境字段
 
-putReservation 按 value.id 落库，并递增 InventoryStore.revision。
+isProduction 仅依据 environment 精确判断，避免依赖部署名称。
 
-> InventoryStore.putReservation 接收 Reservation 后，以 value.id 为键写入 this.reservations，并在保存及返回时展开 value，避免直接暴露 Map 中的对象引用。每次写入同步执行 this.revision += 1，供上层识别状态变更。该约定适用于预约创建和更新；调用方需在传入前完成字段命名与业务校验。
+> isProduction 只检查 Settings.environment 是否等于 production，不依据主机名、目录或其他运行条件推断。配置读取应先经 loadSettings，随后把返回值交给 isProduction；适用于决定生产专属行为的环境判定，避免同一配置在不同工作区产生误判。
 
-适用范围：`src/storage/inventory-store.ts`
+适用范围：`src/config/settings.ts`
 
 ### save覆盖写入的风险
 
@@ -3636,13 +3636,13 @@ SettlementLine 的金额字段须整体写入，失败时不保留半成品结�
 
 适用范围：`src/domain/settlement.ts`
 
-### 库存标识由调用方提供
+### 派发前执行接收状态判定
 
-reservationId 与 orderId 不在路由层生成。
+dispatch 先检查事件是否已接收，再记录事件并返回处理结果。
 
-> 新增预留时，由调用方在 reservationId 和 orderId 中提供业务标识，registerInventoryRoutes 仅校验后传给 InventoryService.reserve。这样同一订单重试能够携带同一标识，由服务层结合库存仓储执行去重；不要在 handler 内生成随机值，否则超时重试可能形成重复预留。
+> 调用 NotificationDispatcher.dispatch 时，先用 delivered.has(event.eventId) 判断当前事件是否已有接收记录；未接收时，将事件及独立复制的 data 写入 delivered，并返回 delivered 为 true。已存在相同事件标识时直接返回 false，避免同一事件再次进入后续通知处理。返回值同时携带 eventId，便于调用方关联本次处理结果；该规则适用于 NotificationDispatcher 接收事件的统一入口。
 
-适用范围：`src/http/inventory-routes.ts`
+适用范围：`src/notifications/dispatcher.ts`
 
 ### 会员导入按业务键重试
 
@@ -3764,13 +3764,13 @@ settlementLine 依赖订单总额与退款额，生成结算行时应同步取�
 
 适用范围：`src/domain/settlement.ts`
 
-### 按业务顺序注册库存路由
+### 迁移默认值后覆盖输入
 
-库存路由按查询、初始化、入库、预留到消耗的顺序注册。
+migrateSettings 先建立默认配置，再用输入项完成覆盖。
 
-> 在 registerInventoryRoutes 中，先注册 GET 查询，再注册 POST 的 initialize、receive、reserve、release、consume 等操作。registry.register 的调用顺序反映从读取现状到改变库存的业务推进路径，便于定位接口及构造连续测试。调整顺序时仍须让 GET /inventory 位于写操作之前，并保持 transfer、consume 等依赖已有库存或预留的接口排在供应路径之后；该规则仅适用于当前库存 HTTP 路由注册。
+> 迁移旧配置时调用 migrateSettings，先创建包含 schemaVersion、timezone 与 retryLimit 的默认 Settings，再展开 input 覆盖对应项；读取方随后通过 loadSettings 获取最终结果。该顺序适用于配置结构升级，可确保缺失字段有稳定默认值，同时保留调用方提供的有效配置。
 
-适用范围：`src/http/inventory-routes.ts`
+适用范围：`src/config/settings.ts`
 
 ### 业务标识由请求提供
 
@@ -3852,13 +3852,13 @@ templateNames 返回当前已登记模板，供配置校验和选择界面使用
 
 适用范围：`src/notifications/templates.ts`
 
-### 审计载荷统一脱敏
+### 按动作筛选审计记录
 
-审计事件写入前统一调用 auditPayload，避免敏感字段进入日志链路。
+AuditStore.byAction 复用 all 的隔离副本，再按 action 精确筛选。
 
-> 构造 AuditEntry 时，payload 必须交给 auditPayload 处理，不得直接将原始 entry.payload 写入日志、队列或存储。auditPayload 调用 redactSensitive 生成可记录副本，返回 Record\<string, unknown>，保留结构化信息并避免密钥、令牌等敏感值进入审计链路。适用于所有通过 AuditEntry 提交的事件；展示字段可结合 publicAuditFields 与 canExposeAudit 判断，事件主题仍由 auditTopic 提供。
+> AuditStore.byAction 先调用 all 获取与内部状态隔离的记录集合，再用 filter 保留 action 完全相等的 AuditEntry。团队需要按业务动作查询审计轨迹时，应使用 byAction，不要直接遍历 values 并自行共享条目引用；统一入口既能保持读取副本策略，也能确保筛选条件只依据 action 字段。该做法适用于审计查询接口及服务层按动作分组场景。
 
-适用范围：`src/security/audit-policy.ts`
+适用范围：`src/storage/audit-store.ts`
 
 ### 注入审计ID生成器
 

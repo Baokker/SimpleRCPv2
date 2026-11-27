@@ -42,13 +42,13 @@ run 读取路由取得 request.identity 后调用权限入口
 
 适用范围：`src/extracted/auth/permissions.ts`
 
-### 按数组次序持久化消息
+### 先封存再建立会话
 
-ChatFile 中的 messages 必须保持业务写入顺序，避免读取后顺序漂移。
+迁移先处理失效会话，再处理缺失会话的运行记录。
 
-> saveMessages 写出的 ChatFile.messages 应沿用 createChatStore 维护的消息数组次序，loadMessages 也应按该次序还原 ChatMessage。原因是该文件同时承担版本化和历史内容存储，乱序会让会话上下文与业务记录不一致。此规则适用于消息创建、更新、删除后的文件写入，以及启动时的历史加载。
+> migrateLegacyAgentSessions 先遍历 sessionStore.list，将非 team、成员已不在 memberIds 且 historical 为 false 的会话更新为 historical。随后才遍历 runs 并补建缺失会话；该顺序适用于迁移启动阶段需先稳定旧会话状态、再修复运行引用的场景。
 
-适用范围：`src/extracted/chat.ts`
+适用范围：`src/extracted/agent/agentSessionAccess.ts`
 
 ### 房间事件使用提交后快照
 
@@ -114,13 +114,13 @@ AgentSessionStore 用 ReturnType 推导工厂返回结构，新增方法无需�
 
 适用范围：`src/extracted/agent/agentSessionStore.ts`
 
-### 会话 id 由 nanoid 分配
+### 列表操作采用异步返回约定
 
-create 用 nanoid(12) 生成会话 id，调用方无需自带主键。
+AgentRunStore 的列表能力保持异步形态，为底层读取留出扩展空间。
 
-> createAgentSessionStore.create 的入参类型是 Omit\<AgentSession, "id" | "createdAt" | "updatedAt">，id 由 nanoid(12) 在存储层生成，createdAt 与 updatedAt 同为一次 new Date().toISOString() 的快照。原因是主键唯一性与时间戳由存储统一负责，调用方传入脏 id 会造成覆盖风险，所以接口层面直接禁掉这三个字段。适用范围：任何新建 Agent 会话的入口（HTTP handler、CLI、Agent 运行时）都不要再自行拼接 id 或时间；需要在创建前知道 id 的场景要在 records.create 之后再取回记录。
+> 团队决策是让 `AgentRunStore` 中的 `list` 保持异步调用形式，调用方通过 `await` 获取结果，而不是把接口收敛为同步数组。工厂 `createAgentRunStore` 负责把异步读取与排序组合成统一能力，因此上层无需了解底层记录的读取方式。该约定适用于 Agent 运行记录的列表访问；若以后改为全量同步加载，仍须同步调整 `AgentRunStore` 的公开契约。
 
-适用范围：`src/extracted/agent/agentSessionStore.ts`
+适用范围：`src/extracted/agent/agentRunStore.ts`
 
 ### 设置文件采用版本化封装
 
@@ -162,13 +162,13 @@ ChatAgentBridge 由 createChatAgentBridge 的返回类型生成，避免接口�
 
 适用范围：`src/extracted/agent/chatAgentBridge.ts`
 
-### 敏感值递归脱敏并识别凭据
+### 运行记录以项目根隔离存放
 
-redactSensitive 递归处理容器，按最长敏感值优先替换并识别凭据。
+每次运行记录固定落在项目专属目录，并由存储工厂统一管理。
 
-> redactSensitive 先合并 collectSensitiveEnvironment 与 sensitiveValues，去重、过滤空值并按长度降序替换，避免短值遮住精确标签，再识别 API_KEY、Bearer 和 Authorization 格式。数组与对象递归调用自身，非字符串标量保持不变。适用于写入 TraceStore 前的 AgentTraceEvent 载荷；输入含空字符串时跳过无意义替换。
+> 团队决策要求 `createAgentRunStore` 将 `runsRoot` 固定为 `projectRoot` 下的 `agent-runs` 目录，并通过 `createRecordStore` 使用统一的 `run.json` 文件布局。这样同一项目的运行数据拥有明确边界，后续的 `create`、`get`、`list` 与 `update` 都复用同一存储实例。创建新项目时必须传入独立 `projectRoot`，禁止复用其他项目的目录，否则记录集合会失去项目隔离。
 
-适用范围：`src/extracted/agent/traceStore.ts`
+适用范围：`src/extracted/agent/agentRunStore.ts`
 
 ### 仓库根目录由模块位置推导
 
@@ -194,13 +194,13 @@ readBoolean 仅接受精确的 true 与 false。
 
 适用范围：`src/extracted/config.ts`
 
-### 事件日志限定传入存储路径
+### 更新时锁定归属字段
 
-createEventLog 仅将 storagePath 作为持久化目标，不扩展路径。
+update 接受局部变更，但恢复会话既有身份与项目归属。
 
-> createEventLog 直接把 storagePath 传给 loadEvents 与 writeJsonFileAtomically，不解析相对目录、拼接工作区根路径或扩大访问边界。调用方须传入已解析的绝对路径，且目标位于允许工作区内，不能将未经校验的用户输入作为 storagePath。未传 storagePath 时仍可 append 和 list，但事件仅保留在当前 EventLog 的内存状态中。
+> createAgentSessionStore 的 update 先合并 current 与 update，随后明确恢复 current.id、current.projectId、current.memberId，并刷新 updatedAt。原因是调用方传入 Partial<AgentSession> 时可能携带身份字段，若直接接受会改变会话归属或项目边界。该决策适用于全部 sessionId 更新；可编辑的业务字段仍由 update 覆盖，时间字段由存储层统一维护。
 
-适用范围：`src/extracted/eventLog.ts`
+适用范围：`src/extracted/agent/agentSessionStore.ts`
 
 ### JSON 读取缺失文件返回空值
 
@@ -316,13 +316,13 @@ run 权限调用提供 Action 和资源对象
 
 适用范围：`src/extracted/auth/permissions.ts`
 
-### 空文件视为无历史事件
+### 快照差异按稳定路径排序
 
-readTrace 仅将 ENOENT 转换为空数组，其余读取错误继续抛出。
+工作区差异输出必须使用确定路径顺序。
 
-> readTrace 遇到 ENOENT 时返回空数组，但 JSON.parse、行格式或其他读取异常必须原样抛出，不能把损坏的 trace 文件伪装成无记录。该约束适用于 TraceStore 的历史读取、分页准备和错误上报，使用者可区分尚未创建与已损坏两种状态。
+> compareAgentWorkspaceSnapshots 应合并 before 与 after 的键后按路径排序，再逐项生成 AgentFileChange。原因是调用方需要稳定、可重复审阅的差异列表，不能依赖 Map 的插入顺序；该规则适用于新增、删除、修改以及二进制内容变化的统一比较输出。
 
-适用范围：`src/extracted/agent/traceStore.ts`
+适用范围：`src/extracted/agent/agentWorkspaceSnapshot.ts`
 
 ### 上下文文件必须为受限文本
 
@@ -372,13 +372,13 @@ ProjectRegistry 从 createProjectRegistry 的异步返回类型推导，避免�
 
 适用范围：`src/extracted/projects.ts`
 
-### Action 权限词表迁移边界
+### 提及解析须过滤无效候选
 
-Action 是权限判断使用的固定动作集合，迁移时不得随意扩充或改写。
+parseMentions 只返回候选集合中有效且不重复的句柄。
 
-> Action 只允许使用 permissions.ts 已列出的动作名称，新增权限需同步检查 requirePermission 与 can 的匹配关系，否则授权判断可能静默失效。迁移历史数据时应保留原有动作字符串语义，仅在明确业务需求后增删成员、Agent 或 workspace 相关项。
+> parseMentions 解析文本后，应先核对 candidates，并用 seen 排除重复句柄；无效或不存在的句柄不得进入 mentions。该约束适用于团队 Agent 的提及提取，目的是避免无效通知和重复通知。
 
-适用范围：`src/extracted/auth/permissions.ts`
+适用范围：`src/extracted/agent/teamAgentSupport.ts`
 
 ### 活动任务限制设置变更
 
@@ -460,13 +460,13 @@ RESERVED_HANDLES 阻止广播或系统语义被成员占用。
 
 适用范围：`src/extracted/agent/teamAgentSupport.ts`
 
-### Trace 写入必须串行提交
+### 存储类型跟随工厂演进
 
-createTraceStore 通过 Promise 链串行化追加，避免并发写坏 trace 文件。
+AgentSessionStore 由工厂返回类型自动推导，避免接口副本漂移。
 
-> createTraceStore 的 append 操作必须沿 operations 形成的 Promise 链依次执行；每个事件都要先由 readTrace 取得末尾 sequence，再写入 AgentTraceEvent。这样做是因为 appendFile 并发执行可能造成行交错或 sequence 重复，串行提交可保持事件顺序。适用范围是同一 TraceStore 实例管理单个 storagePath 的场景；append 失败会中断后续操作，调用方必须处理该异常。
+> AgentSessionStore 使用 ReturnType<typeof createAgentSessionStore> 定义，不再手工声明 create、get、list、findByHandle、update 的签名。这样新增或调整工厂方法时，公开类型会同步反映真实返回值，减少类型定义与实现不一致的风险。该规则适用于 createAgentSessionStore 暴露的存储契约；若需独立演进公共 API，再单独引入稳定接口，而不是复制当前推断结构。
 
-适用范围：`src/extracted/agent/traceStore.ts`
+适用范围：`src/extracted/agent/agentSessionStore.ts`
 
 ### ZIP 条目需通过双重校验
 
@@ -476,13 +476,13 @@ validateEntry 同时约束路径形态与条目类型，阻断越界写入及特
 
 适用范围：`src/extracted/archiveImport.ts`
 
-### 聊天文件只保留版本化消息
+### 句柄校验错误保持稳定
 
-ChatFile 固定使用 version 1 保存消息数组。
+validateHandle 对非法句柄采用统一 Error，便于调用方定位输入问题。
 
-> 持久化聊天历史必须符合 ChatFile 的 version 1 格式，聊天正文集中写入 messages，读取方不能绕过 version 字段直接接受任意 JSON。loadMessages 会依据 version 和 messages 校验旧数据，格式漂移会被判定为无效历史。该约定适用于 createChatStore 使用的聊天存储文件及 saveMessages 写出的数据，不涵盖仅存在于内存中的临时状态。
+> 团队约定 validateHandle 对不满足 HANDLE_PATTERN 或命中 RESERVED_HANDLES 的输入统一抛出 Error，并返回原文句柄表示通过。调用方可以据此区分成功与拒绝，但不得依赖错误文案识别具体失败条件。该约定适用于 Team Agent 句柄的新增、更新及任何需要确保句柄可直接用于 @ 提及的场景。
 
-适用范围：`src/extracted/chat.ts`
+适用范围：`src/extracted/agent/teamAgentSupport.ts`
 
 ### 跨模块统一引用 ChatStore
 
@@ -564,13 +564,13 @@ POST members 对 memberId、name、role 分别做 typeof 与 String 转换，缺
 
 适用范围：`src/extracted/routes/collaborationRoutes.ts`
 
-### 写操作先验权限校验
+### 项目路径统一由元数据函数解析
 
-创建和导入项目前必须先校验写权限，拒绝后立即终止请求。
+成员存储访问项目数据时只使用 projectDataPath 返回的路径，禁止自行拼接目录。
 
-> 在 registerProjectRoutes 中，POST /api/projects、POST /api/projects/import 和 POST /api/projects/import-zip 都先调用 can(req.identity, "project:write")；校验不通过时执行 res.sendStatus(403) 并 return，不进入 createBlankProject、importDirectory 或 importZip。这样可避免未授权请求触发文件写入、目录导入或压缩包处理，并保证失败响应发生在任何项目变更之前。该规则适用于所有会创建或导入项目资源的路由。
+> 约束：createMemberStore 内部需要定位项目数据时，必须调用 projectDataPath，并把其返回值作为后续读取或写入目标；不要依据项目名称自行拼接路径。projectDataPath 固定委托 getProjectMetadataPath 解析，使 MemberStore 与项目元数据布局保持一致，避免目录规则变化后成员文件读取和保存指向错误位置。该规则适用于 createMemberStore 管理的项目级成员数据，不覆盖成员运行态身份的解析。
 
-适用范围：`src/extracted/routes/projectRoutes.ts`
+适用范围：`src/extracted/auth/identity.ts`
 
 ### 项目列表承担运行时失效职责
 
@@ -694,13 +694,13 @@ Agent 子进程环境只保留允许的公开字段
 
 适用范围：`src/extracted/rooms.ts`
 
-### 追加返回值须与落盘事件一致
+### 工作区快照缺失文件按删除统计
 
-createTraceStore.append 返回本次实际写入的 AgentTraceEvent。
+快照比较应区分新增、删除与内容变更。
 
-> createTraceStore.append 应把 operations 队列中最终赋给 result 的 event 返回给调用方，而不是回显 input；这样 sequence、timestamp 与脱敏后的内容才和落盘记录一致。该规则适用于 TraceStore 追加调用及其结果消费，不涉及历史记录的读取边界。
+> createAgentWorkspaceSnapshot 读取工作区时，目录不存在或没有可读文件应得到空 Map，而不是让比较流程失败。原因是快照用于前后差异检测，缺少文件必须能与 before 中的条目对应并被识别为删除；该规则适用于工作区采集及 compareAgentWorkspaceSnapshots 的空目录输入。
 
-适用范围：`src/extracted/agent/traceStore.ts`
+适用范围：`src/extracted/agent/agentWorkspaceSnapshot.ts`
 
 ### AgentRun 更新不得改写标识
 
@@ -766,29 +766,29 @@ resolveWorkspacePath 在返回路径前阻断根目录外访问。
 
 适用范围：`src/extracted/workspace.ts`
 
-### 成员缓存刷新顺序风险
+### 句柄格式须受统一约束
 
-save 必须先完成原子写入，再更新 cache，防止读取到未落盘成员。
+HANDLE_PATTERN 限定可接受的 Agent 句柄结构。
 
-> createMemberStore 的 save 应先通过 writeJsonFileAtomically 持久化 members.json，成功后再执行 cache.set。若提前更新 cache，写入失败时内存会暴露尚未落盘的成员状态。该顺序适用于成员新增、角色变更及其他会改变 MemberFile 的操作。
+> HANDLE_PATTERN 用于约束句柄只能由小写字母、数字和连字符组成，首位为字母或数字且总长度受限。validateHandle 与 normalizeHandle 应沿用同一格式边界，以避免解析、校验和规范化产生不同结果。
+
+适用范围：`src/extracted/agent/teamAgentSupport.ts`
+
+### 运行存储类型随工厂演进
+
+AgentRunStore 绑定工厂的实际返回类型，新增存储能力时应同步调整派生类型。
+
+> AgentRunStore 应始终由 createAgentRunStore 的返回类型推导，而不是手写一套重复接口。这样能让运行时新增的方法和字段立即反映到调用方，避免类型声明与真实存储实例漂移；该约束适用于 AgentRunStore 及其所有依赖该类型的编译检查。
+
+适用范围：`src/extracted/agent/agentRunStore.ts`
+
+### 成员存储操作须排队
+
+MemberStore 的文件变更应串行执行，避免并发写入互相覆盖。
+
+> createMemberStore 内的 enqueue 必须让每次文件操作接续前一项完成，即使前一项失败也不能阻断后续队列。这样可防止两个请求同时改写 MemberFile 时出现旧内容覆盖新内容；该规则适用于 MemberStore 的成员加载、登记和更新等所有异步文件操作。
 
 适用范围：`src/extracted/auth/identity.ts`
-
-### 身份解析失败不得放行
-
-成员身份无效时返回 401，避免后续处理使用空身份继续执行。
-
-> createIdentityMiddleware 在 required 为 true 时，若 x-simplercp-member 无法通过 resolveIdentity 或 findIdentity 解析，应由 response.status(401).json 返回错误并停止 next。此规则只约束需要可信成员身份的请求；解析异常也应交给 next(error)，不能改写为成功身份。
-
-适用范围：`src/extracted/auth/identity.ts`
-
-### 工作区写入需双重校验
-
-工作区文件写入既要验证权限词，也要确认项目成员关系。
-
-> registerWorkspaceRoutes 暴露的工作区写入操作必须同时通过权限检查与 requireMember 校验，避免仅有操作权限的主体改动不属于其项目的 workspacePath。该约束适用于文件创建、目录创建、重命名和删除等变更入口；身份无效时应在执行文件操作前终止请求。
-
-适用范围：`src/extracted/routes/workspaceRoutes.ts`
 
 ### 旧版运行记录兼容性风险
 
@@ -798,13 +798,13 @@ AgentRun 校验过宽，磁盘旧数据可能缺少新增必填字段。
 
 适用范围：`src/extracted/agent/agentRunStore.ts`
 
-### 运行时间依赖系统时钟
+### ActiveRun运行态绑定风险
 
-AgentRunStore 的记录时间与排序受进程系统时钟影响。
+运行态同时记录工作区路径与会话标识，丢失任一绑定都会影响协作执行与事件关联。
 
-> AgentRunStore 的 list 按 createdAt 降序排列，create 通过 new Date().toISOString() 写入 createdAt。系统时间调整或多节点时钟不同步会导致记录时间不一致，列表顺序可能偏离真实事件先后。并发创建、跨机器共享 projectRoot 或依赖精确耗时的测试，应注入可控时间来源，并明确单调性与时区语义。
+> AgentRunManager 维护 ActiveRun 时，workspacePath 与 runtimeSessionId 必须作为同一运行实例的关联信息保存，不能只凭路径重建会话。workspacePath 指向本次协作使用的实际工作区，runtimeSessionId 标识对应的运行时会话；两者共同支撑 processQueue、executeRun 及事件记录。创建、更新或恢复 ActiveRun 时，应沿用既有实例的绑定关系，避免新会话误接旧工作区或旧运行被错误续接。
 
-适用范围：`src/extracted/agent/agentRunStore.ts`
+适用范围：`src/extracted/agent/agentRunManager.ts`
 
 ### 文件上下文须先校验缓存
 
@@ -854,21 +854,21 @@ loadSettings 仅在文件不存在时生成默认配置，损坏文件不会被�
 
 适用范围：`src/extracted/agent/agentWorkspaceSnapshot.ts`
 
-### can 当前是放行占位实现
+### 成员缺失统一拒绝请求
 
-can 恒返回 true，调用方不能据此认定权限检查有效。
+工作区路由先通过 requireMember 确认成员身份，成员不存在时立即终止处理。
 
-> 当前 can(identity, \_action, resource) 无条件返回 true，identity、\_action、resource 均未参与判定。因此 requirePermission 调用 can 时不会产生 403，所有已接入该函数的路径实际上处于放行状态。若后续接入成员角色、项目归属或所有者规则，需要同步定义 Action 与 resource.projectId、ownerMemberId 的映射，并补充拒绝用例；在此之前，不得把 can 的结果作为生产授权依据。该事实适用于当前 src/extracted/auth/permissions.ts 及所有依赖它的调用链。
+> registerWorkspaceRoutes 调用 requireMember 校验请求中的 memberId；该函数使用 ProjectRuntime.rooms.getMember 查询当前 room 的成员，未找到时抛出 Error，并返回查到的 member。规则是缺少有效成员记录就拒绝后续工作区操作，避免请求以无效身份继续执行。适用范围为 registerWorkspaceRoutes 中所有需要成员上下文的入口；调用方应按失败请求处理 requireMember 抛出的异常。
 
-适用范围：`src/extracted/auth/permissions.ts`
+适用范围：`src/extracted/routes/workspaceRoutes.ts`
 
-### 消息创建依赖运行时字段校验
+### 事件载荷须防外部改写
 
-TypeScript 输入边界仍需显式规范化消息字段。
+AgentRuntimeEvent 的 data 仅约定形状，调用方不得假定其内容不可变。
 
-> createChatStore 接收 CreateChatMessageInput 后，不能直接信任 text 等运行时值；createMessage 会用 String 和 redactSensitive 转换正文，并把缺省 kind 设为 member。这样可避免非字符串进入 ChatMessage，同时降低敏感内容直接落盘和写入事件的风险。规则适用于通过 createChatStore 创建消息的所有调用方，尤其是从外部请求、Agent 或插件传入 CreateChatMessageInput 的场景。
+> AgentRuntimeEvent.data 采用 Record\<string, unknown>，只保证事件载荷具有键值结构，不提供冻结或只读语义。消费 AgentRuntime.subscribe 回调时，监听方修改 data 的嵌套对象可能影响仍持有同一引用的其他处理者。生产方应交付独立载荷，消费方若需保留结果则先复制；该规则适用于 AgentRuntime 事件分发及其后续排队处理。
 
-适用范围：`src/extracted/chat.ts`
+适用范围：`src/extracted/agent/agentRuntime.ts`
 
 ### 加载事件前验证持久化结构
 
@@ -894,13 +894,13 @@ TypeScript 类型断言不能替代运行时校验，未知请求体不得直接
 
 适用范围：`src/extracted/routes/agentRoutes.ts`
 
-### 连接状态受时钟回拨影响
+### 空会话结果须显式处理
 
-连接离线判定若依赖本地时间，可能把有效连接误判为过期。
+AgentRuntime 的异步结果允许为空，调用链必须区分无结果与成功。
 
-> 在 registerCollaborationRoutes 的连接管理流程中，markConnectionOffline、cleanupStaleMembers 及成员时间字段会参与连接生命周期判断。若实现使用 System 毫秒值并直接比较连接时间，进程时钟回拨会让新连接看起来早于旧连接，或使清理任务过早删除有效成员。团队约定：连接排序和过期判定应使用单调递增时钟或服务端统一时间源，并为时钟偏差预留容差；createdAt、updatedAt 只用于展示和审计。适用范围是 ProjectRuntimeManager 管理的全部 Connection 状态变更。
+> AgentRuntime.createSession 返回 Promise<{ id: string }>，而 getDiff 返回 Promise\<AgentFileChange\[]>；这些签名允许调用方面对空对象、空数组或无条目结果。调用 AgentRuntime.run 前不能假定 sessionId 已由 createSession 产生有效会话，解析 getDiff 结果时也不能把空数组当作异常。实现和上层编排应显式处理空值边界，适用于会话创建、差异展示及运行参数组装。
 
-适用范围：`src/extracted/routes/collaborationRoutes.ts`
+适用范围：`src/extracted/agent/agentRuntime.ts`
 
 ### 项目写操作缺少显式幂等键
 
@@ -976,13 +976,13 @@ registerAgentRoutes 的下载入口必须按会话成员关系授权。
 
 适用范围：`src/extracted/routes/agentRoutes.ts`
 
-### 创建消息前校验输入
+### 迁移结果按会话复用
 
-收紧消息创建接口的必填项与字段类型，避免无效记录进入聊天存储。
+migrateLegacyAgentSessions 复用同一成员的迁移会话对象。
 
-> 调用 createChatStore 的 createMessage 前，应按 CreateChatMessageInput 校验 roomId、authorId、authorName 与 text，kind 仅接受 ChatMessage 支持的值，以防止无效输入污染持久化数据。该规则适用于成员消息、Agent 消息及 mentions、runId 等可选字段的创建入口。
+> migrateLegacyAgentSessions 以 memberId 与 legacyRuntimeSessionId 组成 migrationKey，并通过 migrated 保存 create 返回值。相同键的运行记录复用该对象，同时逐条 update runStore；适合迁移多个运行条目时避免重复创建会话。
 
-适用范围：`src/extracted/chat.ts`
+适用范围：`src/extracted/agent/agentSessionAccess.ts`
 
 ### 二进制样本固定为八千字节
 
@@ -992,13 +992,13 @@ BINARY_SAMPLE_BYTES 统一控制二进制内容采样大小。
 
 适用范围：`src/extracted/workspace.ts`
 
-### Action 词表承担接口契约
+### 会话存储类型绑定工厂
 
-新增或调整权限动作时，必须同步维护 Action 联合类型及调用侧映射。
+AgentSessionStore 的公开类型由 createAgentSessionStore 推导。
 
-> Action 是权限检查使用的封闭词表，新增“agent:read”或“project:write”等能力时应同步更新类型及调用侧。遗漏任一分支会导致编译期才发现契约断裂。适用于定义权限入口、路由动作和 can 数据出口的类型迁移，不用于判断具体主体能否执行某项操作。
+> AgentSessionStore 通过 ReturnType<typeof createAgentSessionStore> 表达当前工厂返回的存储接口。此类型适用于 Agent 会话数据的创建与读取封装；工厂实现调整后应重新检查调用方，确保会话队列行为仍由该类型完整覆盖。
 
-适用范围：`src/extracted/auth/permissions.ts`
+适用范围：`src/extracted/agent/agentSessionStore.ts`
 
 ### 运行管理器依赖注入边界
 
@@ -1016,13 +1016,13 @@ createAgentRunManager 的时间行为由调用方配置，便于测试和跨环�
 
 适用范围：`src/extracted/agent/agentRunManager.ts`
 
-### 追踪文件按运行隔离
+### 以工厂返回类型固定存储契约
 
-getTrace 为每个项目和运行组合建立独立 JSONL 追踪存储。
+AgentRunStore 直接继承工厂返回结构，避免接口与实现漂移。
 
-> getTrace 以 projectId 和 runId 组成缓存键，追踪文件固定写入 store.runsRoot 下的 runId/trace.jsonl。不同运行的事件需隔离，以防并发任务串写日志。createTraceStore 接收 options.sensitiveValues，未配置时使用由 options.apiKey 组成的数组。适用于 AgentRunManager 的追踪读取、追加和诊断。
+> 团队约定用 `export type AgentRunStore = ReturnType<typeof createAgentRunStore>` 暴露存储契约，不另写一套平行接口。这样工厂增减公开方法时，`AgentRunStore` 会同步反映真实能力，调用方仍只依赖 `createAgentRunStore` 的返回结构。该规则适用于 Agent 运行存储的模块边界；若未来需要替换底层实现，应先确认公开成员保持兼容。
 
-适用范围：`src/extracted/agent/agentRunManager.ts`
+适用范围：`src/extracted/agent/agentRunStore.ts`
 
 ### 运行补丁按文件覆盖工作区
 
@@ -1048,21 +1048,21 @@ ChatAgentBridge 仅描述桥接结构，讨论条数上限由 buildDiscussion �
 
 适用范围：`src/extracted/agent/chatAgentBridge.ts`
 
-### save仅负责落盘
+### 会话记录先验型校验
 
-save执行原子写入，不承担内存更新或冲突检测。
+持久化会话须满足最小结构约束，否则按无效记录拒绝加载。
 
-> createRecordStore 内部的 save 只把 record 以 version: 1 和 options.recordKey 写入 record.id 目录下的 options.fileName，并调用 writeJsonFileAtomically。这样可避免文件出现半写状态，也把持久化格式与 Map 的状态维护分开；但 save 本身不检查记录是否存在，也不更新 records，因此创建、更新等调用方必须另行完成唯一性判断与内存同步。该规则适用于 createRecordStore 提供的记录写入流程。
+> createAgentSessionStore 通过 validateRecord 校验 AgentSession：value 必须是非空对象，且 id、projectId、memberId、title 均须为字符串。原因是损坏或异构数据不应进入后续 list、findByHandle 与 update 流程，否则会放大无效状态。该约束适用于 agent-sessions/session.json 的读取与初始化，不负责检查可选 scope、handle 等字段的业务语义。
+
+适用范围：`src/extracted/agent/agentSessionStore.ts`
+
+### 目录读取兼容缺失场景
+
+readDirectory 将目录不存在视为空集合，其他读取错误继续抛出。
+
+> createRecordStore 使用 readDirectory 枚举存储目录时，若 fs.readdir 返回 ENOENT，则将其转换为空数组，使首次使用或目录尚未创建时仍可继续初始化。此规则只忽略目标目录不存在的场景；权限不足、路径类型错误等其他 ErrnoException 必须原样 throw，避免把真实故障误判为空数据。
 
 适用范围：`src/extracted/agent/recordStore.ts`
-
-### Trace 读取采用追加日志格式
-
-readTrace 逐行解析非空 JSON 事件，文件不存在时返回空数组。
-
-> readTrace 按 UTF-8 读取 storagePath，以换行分隔事件，对每个非空行执行 JSON.parse，产出 AgentTraceEvent\[]；仅 ENOENT 返回空数组，其他读取或解析错误原样抛出。因 createTraceStore 的 append 必须用 appendFile 写入完整 JSON 行，该格式适用于单进程写入的追加日志，其他进程同时改写同一文件时可能读到不完整的一行。
-
-适用范围：`src/extracted/agent/traceStore.ts`
 
 ### 压缩包采用双层入口限额
 
@@ -1080,21 +1080,21 @@ ZIP 导入先限制压缩体积，再逐项限制解压体积。
 
 适用范围：`src/extracted/archiveImport.ts`
 
-### 加载聊天历史返回原数组
+### 迁移键防止重复会话
 
-loadMessages 返回已解析的消息引用，调用方应按只读数据使用。
+按成员与运行时会话组合生成迁移键，复用同一会话而不是重复创建。
 
-> loadMessages 在 storagePath 缺失或文件不存在时返回空数组，文件有效时返回 parsed.messages，不克隆每条 ChatMessage，因为读取器只负责校验并提供历史。createChatStore 后续会整体替换 messages，并通过 saveMessages 持久化。该规则适用于需要变更消息的调用方，应使用 ChatStore 更新入口，避免仅修改内存而未写入存储。
+> migrateLegacyAgentSessions 使用 migrationKey 组合 run.memberId 与 legacyRuntimeSessionId，并以 migrated 缓存已创建的 session。多个 run 指向同一成员和运行时会话时，后续 run 会复用同一 session，再分别更新 run.sessionId，避免生成重复会话。该规则适用于一个运行时会话可能关联多条 run 的旧数据迁移；修改 migrationKey 的组成会改变复用边界。
 
-适用范围：`src/extracted/chat.ts`
+适用范围：`src/extracted/agent/agentSessionAccess.ts`
 
-### 持久事件集合界定重试范围
+### 成员写入先于房间同步
 
-durableEventTypes 标识需落盘并按幂等事件处理的操作。
+成员加入采用存储与房间双写顺序，响应同时返回两类结果。
 
-> durableEventTypes 收录 terminal_input、chat_message_created、file_changed 及 Agent 任务生命周期事件。这些操作会改变协作状态或产生可观察副作用，重试时须先按 event.id 去重并确认前次任务或写入结果，不能直接重复执行。该集合也决定 createEventLog 写入 EventFile 的事件范围，未列入的业务瞬时事件不自动获得持久化保证。
+> registerCollaborationRoutes 在处理加入成员请求时，先等待 MemberStore.join 完成，再通过 runtimeManager.get 获取运行时并调用 runtime.rooms.joinRoom。这样可让成员档案成为房间成员关系的前置事实，避免房间已展示参与者但成员存储缺失。接口成功响应同时携带 member 与 participant，分别反映房间登记结果和成员摘要；新增成员流程应沿用该顺序，并处理第二步失败后的补偿策略。
 
-适用范围：`src/extracted/eventLog.ts`
+适用范围：`src/extracted/routes/collaborationRoutes.ts`
 
 ### 仅将 ENOENT 视为路径缺失
 
@@ -1274,13 +1274,13 @@ AgentRuntimeEvent 没有批量投递契约，消费方应逐条处理并按事�
 
 适用范围：`src/extracted/agent/recordStore.ts`
 
-### 脱敏标签不能依赖环境变量名
+### 拒绝空值与越界句柄
 
-sensitiveLabel 仅在当前进程环境中反查名称，否则固定返回 TOKEN。
+validateHandle 在写入前拒绝空句柄、非法字符及保留名称。
 
-> sensitiveLabel 通过 Object.entries(process.env) 查找与 value 相同的环境变量，找不到时返回 TOKEN，因为脱敏发生在持久化前，不能假定环境项名称长期存在。环境变量被删除、值被动态传入或多个名称共用同一值时，只能得到通用标签。createTraceStore 和 redactSensitive 可继续安全脱敏，但依赖具体标签做审计分类的消费者不能把环境变量名视为稳定元数据。
+> 团队约定所有 Team Agent 句柄必须先经过 validateHandle；空字符串、超过 32 个字符、含大写字母或非允许字符的值，以及命中 RESERVED_HANDLES 的名称，均会抛出 Error，不得以空集合、默认名称或截断结果继续处理。该规则用于新建或更新成员时阻断非法标识进入后续流程。
 
-适用范围：`src/extracted/agent/traceStore.ts`
+适用范围：`src/extracted/agent/teamAgentSupport.ts`
 
 ### ZIP 导入需双重计量防护
 
@@ -1306,13 +1306,13 @@ requireIdentity 在鉴权链中拒绝匿名请求并返回 undefined。
 
 适用范围：`src/extracted/auth/permissions.ts`
 
-### 避免重复触发历史加载
+### 迁移写入不可并发
 
-ensureLoaded 复用首次加载 Promise，勿在调用前另行读取。
+会话迁移的异步写入按顺序执行，避免并发更新造成关联错乱。
 
-> 调用方不要绕过 ensureLoaded 重复执行 loadMessages；该函数用 operations 缓存首次加载的 Promise，并仅在加载成功后替换 messages。自行读取会让磁盘状态与 createChatStore 内部状态出现两个来源，迁移期间尤其容易把旧消息覆盖到新消息之后。该限制适用于 createChatStore 暴露的 listMessages、createMessage 和更新操作，测试或修复代码也不应另建独立的加载链路。
+> migrateLegacyAgentSessions 对 sessionStore.list、sessionStore.update、sessionStore.create 和 runStore.update 均使用 await，并在循环内完成写入后再处理下一条 run。这样可保持迁移过程中的状态一致，避免多个 create 或 update 同时修改关联数据。该规则适用于旧 Agent 会话向新会话模型迁移的批处理场景；若改用 Promise.all，需先证明各写入之间不存在顺序依赖。
 
-适用范围：`src/extracted/chat.ts`
+适用范围：`src/extracted/agent/agentSessionAccess.ts`
 
 ### 运行配置先校验再落地
 
@@ -1444,13 +1444,13 @@ MemberFile 固定使用 version: 1，并通过 members 保存记录集合。
 
 适用范围：`src/extracted/auth/identity.ts`
 
-### MemberStore 返回类型约束
+### 保留句柄不得用于通知
 
-MemberStore 直接继承 createMemberStore 的返回形态，调用方应沿用其方法契约。
+RESERVED_HANDLES 集中登记不可选作具体接收者的句柄。
 
-> MemberStore 定义为 ReturnType<typeof createMemberStore>，因此接入成员数据时应使用该工厂已提供的 save、resolveIdentity 或 findIdentity 等能力，不要另建同义存储接口。这样可让类型检查持续覆盖成员查找与持久化流程，并减少运行时行为差异。
+> RESERVED_HANDLES 收录 system、all、here、everyone 等保留字。validateHandle 应拒绝这些值，parseMentions 也不得把它们作为具体成员通知。该做法适用于团队 Agent 句柄注册与提及解析，可防止群体表达被误当作个人句柄。
 
-适用范围：`src/extracted/auth/identity.ts`
+适用范围：`src/extracted/agent/teamAgentSupport.ts`
 
 ### MemberRecord 缺省值处理
 
@@ -1564,13 +1564,13 @@ ZIP 解压总量最多 1 GiB，与单文件限额并行生效。
 
 适用范围：`src/extracted/archiveImport.ts`
 
-### Action 用冒号划分权限域
+### 成员存储串行化写入
 
-Action 采用“资源域:操作”形式扩展权限枚举。
+通过 Promise 队列串行执行成员存储操作，避免并发写入破坏文件状态。
 
-> 新增权限时，Action 必须沿用“资源域:操作”的序列化格式，例如 project:list、agent:cancel 和 workspace:write；资源域限定为 project、member、agent、terminal 或 workspace，操作限定为 list、write、read、join、role、settings、create、cancel 或 input。这样 can 与 requirePermission 能按同一字符串稳定匹配，也便于接口、事件和日志持久化该字段。适用于所有权限声明、鉴权调用及跨模块传递 Action 的位置，不能临时创建格式不一致的别名。
+> 教程：在 createMemberStore 中新增写入任务时，统一交给 enqueue 处理，不要直接并发调用 save。enqueue 先把 operation 接到 operations 之后，再将队列恢复为成功或失败后都能继续执行的 Promise。这样可避免成员文件更新时出现写入交错或旧内容覆盖新内容。该做法适用于同一 MemberStore 实例内的成员文件创建、保存等所有会改变持久化状态的操作；不同实例之间不提供协调。
 
-适用范围：`src/extracted/auth/permissions.ts`
+适用范围：`src/extracted/auth/identity.ts`
 
 ### 缺省目录可随模块稳定定位
 
@@ -1588,13 +1588,13 @@ Action 采用“资源域:操作”形式扩展权限枚举。
 
 适用范围：`src/extracted/config.ts`
 
-### 构造事件时省略可选上下文
+### 先校验迁移输入
 
-EventInput 仅强制要求 type，其余上下文按事件需要选择性提供。
+执行旧数据迁移前，先核对项目标识、存储实例与成员集合。
 
-> 调用 append 时，EventInput 只要求提供 type，roomId、memberId、participantId 和 payload 均可省略。缺失上下文时不要用空字符串或虚构成员填充，因为事件可能属于全局范围或仅携带业务载荷。payload 使用 Record\<string, unknown> 接收结构化扩展数据，适用于聊天、文件、工作区及 Agent 等事件；具体事件若需关联主体，再显式填写对应字段。
+> 调用 migrateLegacyAgentSessions 前，先确认 projectId 非空，runStore 与 sessionStore 均提供 list、get、create、update 能力，并确保 memberIds 是用于判断历史会话的成员集合。函数会依据 memberIds 决定 session.historical；若集合包含无关或过期成员，迁移分类将失真。适用于旧 AgentRunStore 和 AgentSessionStore 数据进入新模型前的启动检查。
 
-适用范围：`src/extracted/eventLog.ts`
+适用范围：`src/extracted/agent/agentSessionAccess.ts`
 
 ### 批量更新复用单项加入流程
 
