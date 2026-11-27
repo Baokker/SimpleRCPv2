@@ -1,6 +1,6 @@
 import path from "node:path";
 import {parseArgs} from "node:util";
-import {configSchema, dataset, readJson, root, platformRoot, RunStore, writeJson, readJsonl, digest, exists, selectIds} from "./common.js";
+import {configSchema, dataset, loadLibrary, readJson, root, platformRoot, RunStore, writeJson, readJsonl, digest, exists, selectIds, recordQuotaAborted} from "./common.js";
 import {allK3Conditions, runK3, calibration, type K3Condition} from "./k3.js";
 import {allK4Conditions, runK4, runK4SharedEpisodes, runK4T2FromSavedEpisodes, type K4Condition} from "./k4.js";
 import {runK1Offline, runK1Online, compareK1Recordings} from "./k1.js";
@@ -8,11 +8,12 @@ import {runK2} from "./k2.js";
 import {runK5, K5_CONDITIONS, type K5Condition} from "./k5.js";
 import {runK7} from "./k7.js";
 import {judge} from "./client.js";
+import {isQuotaFailure} from "./interruption.js";
 
 const {values, positionals} = parseArgs({allowPositionals: true, options: {
   config: {type: "string"}, out: {type: "string"}, tasks: {type: "string"}, conditions: {type: "string"}, pairs: {type: "string"},
   pilot: {type: "boolean", default: false}, sharedEpisode: {type: "boolean", default: false}, "shared-episode": {type: "boolean", default: false}, online: {type: "boolean", default: false}, calibration: {type: "boolean", default: false},
-  source: {type: "string"}, limit: {type: "string"}, variants: {type: "string"}, workspace: {type: "string"}, protocol: {type: "string"}, library: {type: "string"}
+  source: {type: "string"}, limit: {type: "string"}, variants: {type: "string"}, workspace: {type: "string"}, protocol: {type: "string"}, library: {type: "string"}, libraries: {type: "string"}
 }});
 const command = positionals[0];
 if (!["verify", "k1", "k1-compare", "k2", "k3", "k4", "k5", "k7", "judge-stability", "summarize"].includes(command)) throw new Error("Command: verify|k1|k1-compare|k2|k3|k4|k5|k7|judge-stability|summarize");
@@ -20,6 +21,12 @@ const resolveInput = (file: string) => path.resolve(platformRoot, file);
 const config = configSchema.parse(values.config ? await readJson(resolveInput(values.config)) : {});
 const library = values.library ?? "trapbench/cards/library.json";
 const data = await dataset(library);
+const libraryPaths = values.libraries ? Object.fromEntries(values.libraries.split(",").map(entry => {
+  const index = entry.indexOf("=");
+  if (index <= 0) throw new Error(`Invalid --libraries entry: ${entry}`);
+  return [entry.slice(0, index), entry.slice(index + 1)];
+})) : {};
+const libraries = Object.fromEntries(await Promise.all(Object.entries(libraryPaths).map(async ([condition, file]) => [condition, await loadLibrary(file)])));
 if (values.limit && (!Number.isSafeInteger(Number(values.limit)) || Number(values.limit) <= 0)) throw new Error("--limit must be a positive integer");
 if (command === "verify") {
   console.log(JSON.stringify({manifestHash: data.manifestHash, filesChecked: data.filesChecked, traps: data.tasks.filter(task => task.kind === "trap").length,
@@ -35,7 +42,7 @@ if (command === "verify") {
   await writeJson(path.join(resolveInput(values.source), "summary.json"), groups); console.log(JSON.stringify(groups));
 } else {
   const directory = values.out ? resolveInput(values.out) : path.join(root, "runs", `${command}-${new Date().toISOString().replace(/[:.]/gu, "-")}`);
-  const store = await new RunStore(directory).open(command, config, data, library);
+  const store = await new RunStore(directory).open(command, config, data, libraryPaths);
   try {
     if (values.protocol) {
       if (command !== "k5") throw new Error("--protocol is supported for K5");
@@ -66,11 +73,19 @@ if (command === "verify") {
       if (values.pilot && !values.tasks) tasks = ["R1-T01", "R1-T02", "R2-T01", "R2-T02", "R1-C01"].map(id => data.tasks.find(task => task.id === id)!);
       const conditions = (values.conditions?.split(",") ?? (values.pilot ? ["C0", "C2"] : allK3Conditions)) as K3Condition[];
       if (new Set(conditions).size !== conditions.length || conditions.some(condition => !allK3Conditions.includes(condition))) throw new Error("Invalid K3 conditions");
-      const combinations = tasks.flatMap(task => conditions.flatMap(condition => Array.from({length: values.pilot ? 1 : config.repetitions}, (_, index) => ({task, condition, repetition: index + 1}))));
+      const repetitions = values.pilot ? 1 : config.repetitions;
+      const combinations = tasks.flatMap(task => Array.from({length: repetitions}, (_, index) => conditions.map(condition => ({task, condition, repetition: index + 1}))).flat());
       if (values.calibration) for (const task of data.tasks.filter(task => task.kind === "trap")) for (let repetition = 1; repetition <= 3; repetition++) {
         if (!combinations.some(item => item.task.id === task.id && item.condition === "C0" && item.repetition === repetition)) combinations.push({task, condition: "C0", repetition});
       }
-      await runK3(data, config, store, combinations); if (values.calibration) console.log(JSON.stringify(await calibration(store)));
+      try {
+        await runK3(data, config, store, combinations, libraries, libraryPaths);
+      } catch (error) {
+        if (!isQuotaFailure(error instanceof Error ? error.message : String(error))) throw error;
+        const keys = await recordQuotaAborted(store, combinations, error);
+        console.log(JSON.stringify({quotaAborted: true, keys, count: keys.length}));
+      }
+      if (values.calibration) console.log(JSON.stringify(await calibration(store)));
     }
     if (command === "k4") {
       const pairs = values.pairs ? selectIds(data.transfers, values.pairs) : data.transfers.filter(pair => values.pilot ? ["P01", "P03"].includes(pair.id) : true);

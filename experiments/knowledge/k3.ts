@@ -4,8 +4,8 @@ import {benchRoot, type Dataset, type ExperimentConfig, type Task, RunStore, dig
 import {PlatformClient, judge} from "./client.js";
 import {attemptDirectory} from "./interruption.js";
 
-export type K3Condition = "C0" | "C1" | "C1s" | "C2" | "C3" | "C4" | "C5" | "C6a" | "C6b" | "C6-stale" | "C6-contradiction" | "C7";
-export const allK3Conditions: K3Condition[] = ["C0", "C1", "C1s", "C2", "C5", "C6a", "C6b", "C7"];
+export type K3Condition = "C0" | "C1" | "C1s" | "C2" | "C3" | "C4" | "C5" | "C6a" | "C6b" | "C6-stale" | "C6-contradiction" | "C7" | "C1-NT40" | "C1-NT500" | "C2-NT500";
+export const allK3Conditions: K3Condition[] = ["C0", "C1", "C1s", "C2", "C5", "C6a", "C6b", "C7", "C1-NT40", "C1-NT500", "C2-NT500"];
 // provider.ts 的固定卡片格式；导入后的 author 与 confirmedBy 在同一项目内长度一致。
 export function fixedCardVariableChars(card: KnowledgeCard) {
   const anchors = card.anchors.map(anchor => `${anchor.file.workspaceRelativePath}${anchor.rangeAtCapture ? `:${anchor.rangeAtCapture.start.line + 1}-${anchor.rangeAtCapture.end.line + 1}` : ""}`).join(", ");
@@ -84,10 +84,10 @@ export function conditionCards(data: Dataset, task: Task, condition: K3Condition
     cards = cards.map(card => card.id === irrelevant.id ? {...card, content: matchedContent} : card);
     lengthDifference = fixedCardVariableChars(irrelevant) + matchedContent.length - targetChars;
   }
-  const injectEnabled = ["C2", "C4", "C5", "C6a", "C6b", "C6-stale", "C6-contradiction", "C7"].includes(condition) && !(task.kind === "control" && ["C5", "C6a", "C6b", "C7"].includes(condition));
+  const injectEnabled = (["C2", "C4", "C5", "C6a", "C6b", "C6-stale", "C6-contradiction", "C7"].includes(condition) || condition.startsWith("C2-NT")) && !(task.kind === "control" && ["C5", "C6a", "C6b", "C7"].includes(condition));
   return {cards, ...(condition === "C1s" ? {selection: {activeFiles, candidateCount: library.filter(card => card.status === "reviewed" && !variants.has(card.id)).length, selectedCount: cards.length, selectedCardIds: cards.map(card => card.id), targetIncluded: task.targetCardId ? cards.some(card => card.id === task.targetCardId) : false}} : {}), configuration: {
     injectEnabled, toolEnabled: ["C3", "C4"].includes(condition), fixedCardIds,
-    topK: 5, maxCharsPerCard: 800, maxTotalChars: 4000, lexicalScoring: condition === "C2" ? "bm25" : "legacy", ranking: "bounded",
+    topK: 5, maxCharsPerCard: 800, maxTotalChars: 4000, lexicalScoring: condition === "C2" || condition.startsWith("C2-NT") ? "bm25" : "legacy", ranking: "bounded",
     postRunCheck: true, inflightNotify: false, proposeEnabled: false
   }, lengthDifference};
 }
@@ -117,7 +117,7 @@ export function knowledgeUsage(trace: any[], targetCardIds: string[]) {
     agentToolCalls: new Set(trace.filter(event => event.type.startsWith("opencode.") && event.data?.part?.type === "tool" && ["completed", "error"].includes(event.data.part.state?.status)).map(event => event.data.part.id)).size
   };
 }
-export async function runK3(data: Dataset, config: ExperimentConfig, store: RunStore, combinations: Array<{task: Task; condition: K3Condition; repetition: number}>) {
+export async function runK3(data: Dataset, config: ExperimentConfig, store: RunStore, combinations: Array<{task: Task; condition: K3Condition; repetition: number}>, libraries: Record<string, Array<{repository: string; card: KnowledgeCard}>> = {}, libraryPaths: Record<string, string> = {}) {
   const client = new PlatformClient(config);
   await client.verifyFor(store.directory);
   await pool(combinations, config.concurrency, async ({task, condition, repetition}) => {
@@ -129,7 +129,8 @@ export async function runK3(data: Dataset, config: ExperimentConfig, store: RunS
     const {project, members} = await client.create(task, raw, key);
     const member = members[0];
     const activeFiles = condition === "C1s" ? await c1sActiveFiles(task) : [];
-    const setup = conditionCards(data, task, condition, activeFiles);
+    const conditionData = libraries[condition] ? {...data, library: libraries[condition]} : data;
+    const setup = conditionCards(conditionData, task, condition, activeFiles);
     const configuration = {...setup.configuration, ...(config.toolInstructionPlacement ? {toolInstructionPlacement: config.toolInstructionPlacement} : {})};
     const stateFile = path.join(raw, "started-run.json");
     const started = Date.now();
@@ -139,7 +140,7 @@ export async function runK3(data: Dataset, config: ExperimentConfig, store: RunS
       const actualConfig = await client.configure(project, member, configuration);
       await writeJson(path.join(raw, "knowledge-config.json"), {actualConfig, cardIds: setup.cards.map(card => card.id), lengthDifference: setup.lengthDifference});
       await writeJson(path.join(raw, "knowledge-cards.json"), (await client.request(client.projectRoute(project, "knowledge/cards"), member)).cards);
-      if (condition === "C1" || condition === "C1s") {
+      if (condition === "C1" || condition === "C1s" || condition.startsWith("C1-NT")) {
         const exported = await client.request(client.projectRoute(project, "knowledge/export/workspace"), member, {});
         if (exported.path !== "AGENTS.md") throw new Error(`${condition} requires an automatically read AGENTS.md`);
         await writeJson(path.join(raw, "static-export.json"), exported);
@@ -154,6 +155,7 @@ export async function runK3(data: Dataset, config: ExperimentConfig, store: RunS
     const usage = knowledgeUsage(output.events, task.targetCardId ? [task.targetCardId] : []);
     await store.append({key, completed: true, task: task.id, repository: task.repository, taskKind: task.kind, condition, repetition,
       projectId: project.id, runId: run.id, runStatus: run.status, functional: actual.functional, trapAvoided: actual.trapAvoided, jointSuccess: actual.jointSuccess,
+      library: libraryPaths[condition] ?? null,
       usage: run.usage ?? null, ...(condition === "C1s" ? {c1s: {...setup.selection, chars: (await readJson(path.join(raw, "c1s-selection.json"))).chars, estimatedTokens: (await readJson(path.join(raw, "c1s-selection.json"))).estimatedTokens}} : {}), rerankCalls: output.modelCalls, rerankEstimatedCost: output.modelCalls.reduce((sum: number, call: any) => sum + (call.estimatedCost ?? 0), 0), ...usage, wallMs: run.startedAt && run.finishedAt ? Date.parse(run.finishedAt) - Date.parse(run.startedAt) : null,
       pipelineMs: Date.now() - started, diffHash: output.diffHash, taskPromptHash: digest(task.prompt), knowledgeConfigHash: digest(configuration), judgeHash: actual.judgeHash,
       artifacts: path.relative(store.directory, raw), error: run.error ?? null});

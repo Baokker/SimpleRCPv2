@@ -1,0 +1,26 @@
+{
+  "experiment": "k3",
+  "commit": "4e2de0f0e3f5dcf77a61cfa2c5875636e1577ae3",
+  "configHash": "69c8ede09f012a7a1cc3c845ae7eb5e53b22379bf9df5422eff6e42ffbcb9ba4",
+  "manifestHash": "6ce9dd9434721117c67e2439a52d002c6942f0ed4112b80adcbb4a5c04d22bd1",
+  "libraries": {
+    "C1": "trapbench/cards/library-500.json",
+    "C2": "trapbench/cards/library-500.json",
+    "C1s": "trapbench/cards/library-500.json",
+    "C1-NT500": "/Users/baokker/.codex/worktrees/r4-context/SimpleRCPv2/experiments/knowledge/runs/r4-scale-v31/exports/library-500-no-targets.json",
+    "C2-NT500": "/Users/baokker/.codex/worktrees/r4-context/SimpleRCPv2/experiments/knowledge/runs/r4-scale-v31/exports/library-500-no-targets.json"
+  },
+  "provider": "minimax",
+  "model": "MiniMax-M3",
+  "config": {
+    "origin": "http://127.0.0.1:4203",
+    "provider": "minimax",
+    "model": "MiniMax-M3",
+    "concurrency": 4,
+    "timeoutMs": 600000,
+    "delayMs": 0,
+    "speed": 1,
+    "repetitions": 3,
+    "seed": 20261127
+  }
+}

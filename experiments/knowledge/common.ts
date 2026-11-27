@@ -15,6 +15,11 @@ export const hash = (value: string | Uint8Array) => createHash("sha256").update(
 export const digest = (value: unknown) => hash(JSON.stringify(value));
 export const readJson = async <T = any>(file: string): Promise<T> => JSON.parse(await fs.readFile(file, "utf8"));
 export const readJsonl = async <T = any>(file: string): Promise<T[]> => (await fs.readFile(file, "utf8")).split("\n").filter(Boolean).map(line => JSON.parse(line));
+export async function loadLibrary(libraryPath: string) {
+  const items = await readJson<Array<{repository: string; card: KnowledgeCard}>>(path.isAbsolute(libraryPath) ? libraryPath : path.join(benchRoot, libraryPath));
+  if (items.some(item => !isKnowledgeCard(item.card))) throw new Error(`Dataset card schema is invalid: ${libraryPath}`);
+  return items;
+}
 export async function exists(file: string) { return fs.stat(file).then(() => true, error => {if (error.code === "ENOENT") return false; throw error;}); }
 export async function writeJson(file: string, value: unknown) {
   await fs.mkdir(path.dirname(file), {recursive: true});
@@ -50,8 +55,7 @@ export async function dataset(libraryPath = "trapbench/cards/library.json") {
     const bytes = information.isSymbolicLink() ? await fs.readlink(file) : await fs.readFile(file);
     if (hash(bytes) !== expected) throw new Error(`Dataset hash mismatch: ${relative}`);
   }
-  const library = await readJson<Array<{repository: string; card: KnowledgeCard}>>(path.join(benchRoot, libraryPath));
-  if (library.some(item => !isKnowledgeCard(item.card))) throw new Error("Dataset card schema is invalid");
+  const library = await loadLibrary(libraryPath);
   const tasks: Task[] = [];
   for (const entry of await fs.readdir(path.join(benchRoot, "trapbench/tasks"), {withFileTypes: true})) {
     if (!entry.isDirectory() || entry.name.startsWith(".")) continue;
@@ -84,7 +88,7 @@ export class RunStore {
   private lock: Awaited<ReturnType<typeof fs.open>> | undefined;
   metadata: Record<string, unknown> = {};
   constructor(readonly directory: string) {}
-  async open(experiment: string, config: ExperimentConfig, data: Dataset, library = "trapbench/cards/library.json") {
+  async open(experiment: string, config: ExperimentConfig, data: Dataset, libraries: Record<string, string> = {}) {
     await fs.mkdir(this.directory, {recursive: true});
     const lockPath = path.join(this.directory, ".runner.lock");
     if (await exists(lockPath)) {
@@ -99,11 +103,11 @@ export class RunStore {
     try {
     await this.lock.writeFile(String(process.pid));
     const commit = (await exec("git", ["rev-parse", "HEAD"], {cwd: platformRoot})).stdout.trim();
-    this.metadata = {experiment, commit, configHash: digest(config), manifestHash: data.manifestHash, library, provider: config.provider, model: config.model};
+    this.metadata = {experiment, commit, configHash: digest(config), manifestHash: data.manifestHash, libraries, provider: config.provider, model: config.model};
     const configurationPath = path.join(this.directory, "configuration.json");
     if (await exists(configurationPath)) {
       const previous = await readJson(configurationPath);
-      for (const key of ["experiment", "commit", "configHash", "manifestHash", "library", "provider", "model"]) {
+      for (const key of ["experiment", "commit", "configHash", "manifestHash", "libraries", "provider", "model"]) {
         if (previous[key] !== this.metadata[key]) throw new Error(`Resume metadata changed: ${key}`);
       }
     } else await writeJson(configurationPath, {...this.metadata, config});
@@ -139,6 +143,25 @@ export class RunStore {
     }
   }
 }
+export async function recordQuotaAborted(store: RunStore, combinations: Array<{task: {id: string}; condition: string; repetition: number}>, error: unknown) {
+  const at = new Date().toISOString();
+  const message = error instanceof Error ? error.message : String(error);
+  const keys: string[] = [];
+  for (const {task, condition, repetition} of combinations) {
+    const key = `${task.id}-${condition}-${repetition}`;
+    const raw = store.raw(key);
+    if (!await exists(path.join(raw, "started-run.json"))) continue;
+    if (await exists(path.join(raw, "judge-output.json"))) continue;
+    await writeJson(path.join(raw, "quota-aborted.json"), {key, at, message: message.slice(0, 1000)});
+    keys.push(key);
+  }
+  if (keys.length) {
+    await fs.appendFile(path.join(store.directory, "quota-aborted.jsonl"), keys.map(key => JSON.stringify({key, at, message: message.slice(0, 1000)})).join("\n") + "\n");
+  }
+  await writeJson(path.join(store.directory, "quota-summary.json"), {at, keys, count: keys.length, message: message.slice(0, 1000)});
+  return keys;
+}
+
 export async function pool<T>(items: T[], concurrency: number, processItem: (item: T) => Promise<void>, onFailure?: (error: unknown) => Promise<void>) {
   let cursor = 0;
   let failure: unknown;

@@ -1,0 +1,177 @@
+{
+  "updatedAt": "2026-11-27T09:21:01.081Z",
+  "stages": {
+    "stage-a": {
+      "completed": 1,
+      "resultsFile": "formal/stage-a/results.jsonl"
+    },
+    "stage-b": {
+      "completed": 0,
+      "resultsFile": "formal/stage-b/results.jsonl"
+    },
+    "stage-c": {
+      "completed": 0,
+      "resultsFile": "formal/stage-c/results.jsonl"
+    }
+  },
+  "groups": {
+    "C1@500": {
+      "stage": "stage-a",
+      "condition": "C1",
+      "scale": 500,
+      "kind": "trap",
+      "completed": 0,
+      "planned": 48,
+      "remaining": 48
+    },
+    "C2@500": {
+      "stage": "stage-a",
+      "condition": "C2",
+      "scale": 500,
+      "kind": "trap",
+      "completed": 0,
+      "planned": 48,
+      "remaining": 48
+    },
+    "C1s@500": {
+      "stage": "stage-a",
+      "condition": "C1s",
+      "scale": 500,
+      "kind": "trap",
+      "completed": 1,
+      "planned": 48,
+      "remaining": 47
+    },
+    "C1-NT@500": {
+      "stage": "stage-a",
+      "condition": "C1-NT500",
+      "scale": 500,
+      "kind": "trap",
+      "completed": 0,
+      "planned": 48,
+      "remaining": 48
+    },
+    "C2-NT@500": {
+      "stage": "stage-a",
+      "condition": "C2-NT500",
+      "scale": 500,
+      "kind": "trap",
+      "completed": 0,
+      "planned": 48,
+      "remaining": 48
+    },
+    "C1@500-control": {
+      "stage": "stage-a",
+      "condition": "C1",
+      "scale": 500,
+      "kind": "control",
+      "completed": 0,
+      "planned": 18,
+      "remaining": 18
+    },
+    "C2@500-control": {
+      "stage": "stage-a",
+      "condition": "C2",
+      "scale": 500,
+      "kind": "control",
+      "completed": 0,
+      "planned": 18,
+      "remaining": 18
+    },
+    "C1s@500-control": {
+      "stage": "stage-a",
+      "condition": "C1s",
+      "scale": 500,
+      "kind": "control",
+      "completed": 0,
+      "planned": 18,
+      "remaining": 18
+    },
+    "C1@40": {
+      "stage": "stage-b",
+      "condition": "C1",
+      "scale": 40,
+      "kind": "trap",
+      "completed": 0,
+      "planned": 48,
+      "remaining": 48
+    },
+    "C2@40": {
+      "stage": "stage-b",
+      "condition": "C2",
+      "scale": 40,
+      "kind": "trap",
+      "completed": 0,
+      "planned": 48,
+      "remaining": 48
+    },
+    "C1s@40": {
+      "stage": "stage-b",
+      "condition": "C1s",
+      "scale": 40,
+      "kind": "trap",
+      "completed": 0,
+      "planned": 48,
+      "remaining": 48
+    },
+    "C1-NT@40": {
+      "stage": "stage-b",
+      "condition": "C1-NT40",
+      "scale": 40,
+      "kind": "trap",
+      "completed": 0,
+      "planned": 48,
+      "remaining": 48
+    },
+    "C1@40-control": {
+      "stage": "stage-b",
+      "condition": "C1",
+      "scale": 40,
+      "kind": "control",
+      "completed": 0,
+      "planned": 18,
+      "remaining": 18
+    },
+    "C2@40-control": {
+      "stage": "stage-b",
+      "condition": "C2",
+      "scale": 40,
+      "kind": "control",
+      "completed": 0,
+      "planned": 18,
+      "remaining": 18
+    },
+    "C1s@40-control": {
+      "stage": "stage-b",
+      "condition": "C1s",
+      "scale": 40,
+      "kind": "control",
+      "completed": 0,
+      "planned": 18,
+      "remaining": 18
+    },
+    "C1@200": {
+      "stage": "stage-c",
+      "condition": "C1",
+      "scale": 200,
+      "kind": "trap",
+      "completed": 0,
+      "planned": 48,
+      "remaining": 48
+    },
+    "C2@200": {
+      "stage": "stage-c",
+      "condition": "C2",
+      "scale": 200,
+      "kind": "trap",
+      "completed": 0,
+      "planned": 48,
+      "remaining": 48
+    }
+  },
+  "totals": {
+    "completed": 1,
+    "planned": 636
+  },
+  "quotaAborted": []
+}
