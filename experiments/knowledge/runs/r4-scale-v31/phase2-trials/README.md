@@ -11,7 +11,7 @@ pnpm --filter @simplercp/experiments experiment k3 \
   --out experiments/knowledge/runs/r4-scale-v31/phase2-trials/c1c2-500d
 ```
 
-平台提交 `3184d258` 之后的工作区（阶段 2 代码改动另行提交）；数据提交 `e2900ba`，manifest `6ce9dd94…`；配置 `r4-trial.json`（HTTP 4203、MiniMax-M3、1 次重复、并发 1、speed 1）。
+平台提交 `dc30074f`（阶段 2）；数据提交 `e2900ba`，manifest `6ce9dd94…`；配置 `r4-trial.json`（HTTP 4203、MiniMax-M3、1 次重复、并发 1、speed 1）。
 
 ## 成功
 
